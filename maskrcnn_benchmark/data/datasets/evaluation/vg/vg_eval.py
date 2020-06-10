@@ -151,9 +151,11 @@ def do_vg_evaluation(
         global_container['attribute_on'] = attribute_on
         global_container['num_attributes'] = num_attributes
         
-        for groundtruth, prediction in zip(groundtruths, predictions):
+        for groundtruth, prediction, __id in zip(groundtruths, predictions,range(len(groundtruths))):
+            #print('img id in:', __id)
             evaluate_relation_of_one_image(groundtruth, prediction, global_container, evaluator)
-        
+            #print('img id out:', __id)
+            
         # calculate mean recall
         eval_mean_recall.calculate_mean_recall(mode)
         
