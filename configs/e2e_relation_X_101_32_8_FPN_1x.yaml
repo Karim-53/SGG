@@ -79,7 +79,7 @@ MODEL:
     ### Implementation for paper "Unbiased Scene Graph Generation from Biased Training"
     CAUSAL:
       EFFECT_TYPE: 'none'             # candicates: 'TDE', 'NIE', 'TE', 'none'
-      FUSION_TYPE: 'sum'              # candicates: 'sum', 'gate'         
+      FUSION_TYPE: 'sum'              # candicates: 'sum', 'gate', 'dist'
       SEPARATE_SPATIAL: False         # separate spatial in union feature
       CONTEXT_LAYER: "motifs"         # candicates: motifs, vctree, vtranse
       SPATIAL_FOR_VISION: True

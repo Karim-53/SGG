@@ -647,6 +647,18 @@ class CausalAnalysisPredictor(nn.Module):
         return holder
 
     def calculate_logits(self, vis_rep, ctx_rep, frq_rep, use_label_dist=True, mean_ctx=False):
+        """
+        Apply the Fusion Function: SUM, GATE, DIST
+        The explanation below refer to Figure 5 in https://arxiv.org/pdf/https://arxiv.org/pdf/
+
+        :param vis_rep: input from U to Y (Visual Context Input for SGG)
+        :param ctx_rep: input from X to Y (Object Feature Input for SGG). If TDE is applied, only this variable would change.
+        :param frq_rep: input from Z to Y (Object Class   Input for SGG). If TE  is applied, this variable and ctx_rep would change.
+        :param use_label_dist: bool
+        :param mean_ctx: bool
+
+        :return: rel_dists: The probability distribution of the predicates (i.e. logits or relationship labels
+        """
         if use_label_dist:
             frq_dists = self.freq_bias.index_with_probability(frq_rep)
         else:
@@ -658,7 +670,8 @@ class CausalAnalysisPredictor(nn.Module):
         ctx_dists = self.ctx_compress(ctx_rep)
 
         if self.fusion_type == 'gate':
-            ctx_gate_dists = self.ctx_gate_fc(ctx_rep)
+            # ye = Wr x_e * sigmoid( Wx x_e + Wv v_e + z_e )
+            ctx_gate_dists = self.ctx_gate_fc(ctx_rep) # Wr x_e
             union_dists = ctx_dists * torch.sigmoid(vis_dists + frq_dists + ctx_gate_dists)
             #union_dists = (ctx_dists.exp() * torch.sigmoid(vis_dists + frq_dists + ctx_constraint) + 1e-9).log()    # improve on zero-shot, but low mean recall and TDE recall
             #union_dists = ctx_dists * torch.sigmoid(vis_dists * frq_dists)                                          # best conventional Recall results
@@ -667,9 +680,18 @@ class CausalAnalysisPredictor(nn.Module):
             #union_dists = ctx_dists * torch.sigmoid(vis_dists) * torch.sigmoid(frq_dists)                           # balanced recall and mean recall
             #union_dists = ctx_dists * (torch.sigmoid(vis_dists) + torch.sigmoid(frq_dists)) / 2.0                   # good zero-shot Recall
             #union_dists = ctx_dists * torch.sigmoid((vis_dists.exp() + frq_dists.exp() + 1e-9).log())               # good zero-shot Recall, bad for all of the rest
-            
+
         elif self.fusion_type == 'sum':
+            # ye = Wx x_e + Wv v_e + z_e
             union_dists = vis_dists + ctx_dists + frq_dists
+        elif self.fusion_type == 'dist':
+            # https://arxiv.org/pdf/1802.05766.pdf
+            # function from original paper:
+            # To fuse vision features x and question features y
+            # f(x: vision features, y: question features) = ReLU(Wx x + Wy y) − (Wx x − Wy y)**2
+            # applied here:
+            #
+            union_dists = torch.sigmoid(vis_dists + frq_dists + ctx_dists) - (vis_dists - ctx_dists)**2
         else:
             print('invalid fusion type')
 
