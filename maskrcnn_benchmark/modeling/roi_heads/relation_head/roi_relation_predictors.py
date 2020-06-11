@@ -691,7 +691,8 @@ class CausalAnalysisPredictor(nn.Module):
             # f(x: vision features, y: question features) = ReLU(Wx x + Wy y) − (Wx x − Wy y)**2
             # applied here:
             #
-            union_dists = torch.sigmoid(vis_dists + frq_dists + ctx_dists) - (vis_dists - ctx_dists)**2
+            # union_dists = torch.sigmoid(vis_dists + frq_dists + ctx_dists) - (vis_dists - ctx_dists)**2 # Gradient overflow. Skipping step, loss scaler 0 reducing loss scale to 0.0
+            union_dists = torch.sigmoid(vis_dists + frq_dists + ctx_dists) - torch.sigmoid(vis_dists - ctx_dists)**2
         else:
             print('invalid fusion type')
 
