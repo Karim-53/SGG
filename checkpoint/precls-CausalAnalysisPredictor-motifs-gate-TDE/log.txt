@@ -1,0 +1,1242 @@
+2020-06-10 09:04:00,443 maskrcnn_benchmark INFO: Using 8 GPUs
+2020-06-10 09:04:00,443 maskrcnn_benchmark INFO: Namespace(config_file='configs/e2e_relation_X_101_32_8_FPN_1x.yaml', distributed=True, local_rank=0, opts=['MODEL.ROI_RELATION_HEAD.USE_GT_BOX', 'True', 'MODEL.ROI_RELATION_HEAD.USE_GT_OBJECT_LABEL', 'True', 'MODEL.ROI_RELATION_HEAD.PREDICTOR', 'CausalAnalysisPredictor', 'MODEL.ROI_RELATION_HEAD.CAUSAL.CONTEXT_LAYER', 'motifs', 'MODEL.ROI_RELATION_HEAD.CAUSAL.FUSION_TYPE', 'gate', 'MODEL.ROI_RELATION_HEAD.CAUSAL.EFFECT_TYPE', 'TDE', 'SOLVER.IMS_PER_BATCH', '64', 'TEST.IMS_PER_BATCH', '8', 'DTYPE', 'float16', 'SOLVER.MAX_ITER', '40000', 'SOLVER.VAL_PERIOD', '2000', 'SOLVER.CHECKPOINT_PERIOD', '2000', 'GLOVE_DIR', 'glove/', 'MODEL.PRETRAINED_DETECTOR_CKPT', 'checkpoint/pretrained_faster_rcnn/model_final.pth', 'OUTPUT_DIR', 'checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE'], skip_test=False)
+2020-06-10 09:04:00,443 maskrcnn_benchmark INFO: Collecting env info (might take some time)
+2020-06-10 09:04:05,572 maskrcnn_benchmark INFO: 
+PyTorch version: 1.5.0+cu101
+Is debug build: No
+CUDA used to build PyTorch: 10.1
+
+OS: Ubuntu 16.04.4 LTS
+GCC version: (Ubuntu 5.4.0-6ubuntu1~16.04.10) 5.4.0 20160609
+CMake version: version 3.5.1
+
+Python version: 3.7
+Is CUDA available: Yes
+CUDA runtime version: 10.1.105
+GPU models and configuration: 
+GPU 0: GeForce RTX 2080 Ti
+GPU 1: GeForce RTX 2080 Ti
+GPU 2: GeForce RTX 2080 Ti
+GPU 3: GeForce RTX 2080 Ti
+GPU 4: GeForce RTX 2080 Ti
+GPU 5: GeForce RTX 2080 Ti
+GPU 6: GeForce RTX 2080 Ti
+GPU 7: GeForce RTX 2080 Ti
+
+Nvidia driver version: 418.67
+cuDNN version: /usr/lib/x86_64-linux-gnu/libcudnn.so.7.6.5
+
+Versions of relevant libraries:
+[pip3] numpy==1.18.5
+[pip3] torch==1.5.0+cu101
+[pip3] torchvision==0.6.0+cu101
+[conda] mkl                       2018.0.1             h19d6760_4  
+[conda] mkl-service               1.1.2            py36h17a0993_4  
+[conda] torch                     1.5.0+cu101              pypi_0    pypi
+[conda] torchvision               0.6.0+cu101              pypi_0    pypi
+        Pillow (7.1.2)
+2020-06-10 09:04:05,573 maskrcnn_benchmark INFO: Loaded configuration file configs/e2e_relation_X_101_32_8_FPN_1x.yaml
+2020-06-10 09:04:05,573 maskrcnn_benchmark INFO: 
+INPUT:
+  MIN_SIZE_TRAIN: (600,)
+  MAX_SIZE_TRAIN: 1000
+  MIN_SIZE_TEST: 600
+  MAX_SIZE_TEST: 1000
+MODEL:
+  META_ARCHITECTURE: "GeneralizedRCNN"
+  WEIGHT: "catalog://ImageNetPretrained/FAIR/20171220/X-101-32x8d"
+  BACKBONE:
+    CONV_BODY: "R-101-FPN" # VGG-16
+  RESNETS:
+    BACKBONE_OUT_CHANNELS: 256
+    STRIDE_IN_1X1: False
+    NUM_GROUPS: 32
+    WIDTH_PER_GROUP: 8
+  RELATION_ON: True
+  ATTRIBUTE_ON: False
+  FLIP_AUG: False            # if there is any left-right relation, FLIP AUG should be false
+  RPN:
+    USE_FPN: True
+    ANCHOR_SIZES: (32, 64, 128, 256, 512)
+    ANCHOR_STRIDE: (4, 8, 16, 32, 64)
+    ASPECT_RATIOS: (0.23232838, 0.63365731, 1.28478321, 3.15089189)   # from neural-motifs
+    PRE_NMS_TOP_N_TRAIN: 6000
+    PRE_NMS_TOP_N_TEST: 6000
+    POST_NMS_TOP_N_TRAIN: 1000
+    POST_NMS_TOP_N_TEST: 1000
+    FPN_POST_NMS_TOP_N_TRAIN: 1000
+    FPN_POST_NMS_TOP_N_TEST: 1000
+    FPN_POST_NMS_PER_BATCH: False
+    RPN_MID_CHANNEL: 256
+  ROI_HEADS:
+    USE_FPN: True
+    POSITIVE_FRACTION: 0.5
+    BG_IOU_THRESHOLD: 0.3
+    BATCH_SIZE_PER_IMAGE: 256
+    DETECTIONS_PER_IMG: 80
+    NMS_FILTER_DUPLICATES: True
+  ROI_BOX_HEAD:
+    POOLER_RESOLUTION: 7
+    POOLER_SCALES: (0.25, 0.125, 0.0625, 0.03125)
+    POOLER_SAMPLING_RATIO: 2
+    FEATURE_EXTRACTOR: "FPN2MLPFeatureExtractor"
+    PREDICTOR: "FPNPredictor"
+    NUM_CLASSES: 151                # 151 for VG, 1201 for GQA
+    MLP_HEAD_DIM: 4096
+  ROI_ATTRIBUTE_HEAD:
+    FEATURE_EXTRACTOR: "FPN2MLPFeatureExtractor"
+    PREDICTOR: "FPNPredictor"
+    USE_BINARY_LOSS: True           # choose binary, because cross_entropy loss deteriorate the box head, even with 0.1 weight
+    POS_WEIGHT: 50.0
+    ATTRIBUTE_LOSS_WEIGHT: 1.0
+    NUM_ATTRIBUTES: 201             # 201 for VG, 501 for GQA
+    MAX_ATTRIBUTES: 10             
+    ATTRIBUTE_BGFG_SAMPLE: True    
+    ATTRIBUTE_BGFG_RATIO: 3        
+  ROI_RELATION_HEAD:
+    USE_GT_BOX: True
+    USE_GT_OBJECT_LABEL: True
+    REQUIRE_BOX_OVERLAP: False              # for sgdet, during training, only train pairs with overlap
+    ADD_GTBOX_TO_PROPOSAL_IN_TRAIN: True    # for sgdet only, in case some gt boxes are missing
+    NUM_CLASSES: 51                 # 51 for VG, 201 for GQA (not contain "to the left of" & "to the right of")
+    BATCH_SIZE_PER_IMAGE: 1024      # sample as much as possible
+    POSITIVE_FRACTION: 0.25
+    CONTEXT_POOLING_DIM: 4096
+    CONTEXT_HIDDEN_DIM: 512         #1024 for VCTree
+    POOLING_ALL_LEVELS: True
+    LABEL_SMOOTHING_LOSS: False
+    FEATURE_EXTRACTOR: "RelationFeatureExtractor"
+    #################### Select Relationship Model ####################
+    #PREDICTOR: "MotifPredictor"
+    #PREDICTOR: "VCTreePredictor"
+    #PREDICTOR: "TransformerPredictor"
+    PREDICTOR: "CausalAnalysisPredictor"
+    ################# Parameters for Motif Predictor ##################
+    CONTEXT_OBJ_LAYER: 1
+    CONTEXT_REL_LAYER: 1
+    ############# Parameters for Causal Unbias Predictor ##############
+    ### Implementation for paper "Unbiased Scene Graph Generation from Biased Training"
+    CAUSAL:
+      EFFECT_TYPE: 'none'             # candicates: 'TDE', 'NIE', 'TE', 'none'
+      FUSION_TYPE: 'sum'              # candicates: 'sum', 'gate'         
+      SEPARATE_SPATIAL: False         # separate spatial in union feature
+      CONTEXT_LAYER: "motifs"         # candicates: motifs, vctree, vtranse
+      SPATIAL_FOR_VISION: True
+      EFFECT_ANALYSIS: True
+    ############### Parameters for Transformer Predictor ##############
+    TRANSFORMER:
+      DROPOUT_RATE: 0.1
+      OBJ_LAYER: 4
+      REL_LAYER: 2
+      NUM_HEAD: 8
+      KEY_DIM: 64
+      VAL_DIM: 64
+      INNER_DIM: 2048 
+DATASETS:
+  TRAIN: ("VG_stanford_filtered_with_attribute_train",)
+  VAL: ("VG_stanford_filtered_with_attribute_val",)
+  TEST: ("VG_stanford_filtered_with_attribute_test",)
+DATALOADER:
+  SIZE_DIVISIBILITY: 32
+SOLVER:
+  BIAS_LR_FACTOR: 1
+  BASE_LR: 0.01
+  WARMUP_FACTOR: 0.1
+  WEIGHT_DECAY: 0.0001
+  MOMENTUM: 0.9
+  GRAD_NORM_CLIP: 5.0
+  STEPS: (10000, 16000)
+  MAX_ITER: 40000
+  VAL_PERIOD: 2000
+  CHECKPOINT_PERIOD: 2000
+  PRINT_GRAD_FREQ: 4000
+  SCHEDULE:
+    # the following paramters are only used for WarmupReduceLROnPlateau
+    TYPE: "WarmupReduceLROnPlateau"    # WarmupMultiStepLR, WarmupReduceLROnPlateau
+    PATIENCE: 2
+    THRESHOLD: 0.001
+    COOLDOWN: 0
+    FACTOR: 0.1
+    MAX_DECAY_STEP: 3
+OUTPUT_DIR: './output/relation_baseline'
+TEST:
+  ALLOW_LOAD_FROM_CACHE: False
+  RELATION:
+    SYNC_GATHER: True      # turn on will slow down the evaluation to solve the sgdet test out of memory problem
+    REQUIRE_OVERLAP: False
+    LATER_NMS_PREDICTION_THRES: 0.5
+
+2020-06-10 09:04:05,576 maskrcnn_benchmark INFO: Running with config:
+AMP_VERBOSE: False
+DATALOADER:
+  ASPECT_RATIO_GROUPING: True
+  NUM_WORKERS: 4
+  SIZE_DIVISIBILITY: 32
+DATASETS:
+  TEST: ('VG_stanford_filtered_with_attribute_test',)
+  TRAIN: ('VG_stanford_filtered_with_attribute_train',)
+  VAL: ('VG_stanford_filtered_with_attribute_val',)
+DTYPE: float16
+GLOVE_DIR: glove/
+INPUT:
+  BRIGHTNESS: 0.0
+  CONTRAST: 0.0
+  HUE: 0.0
+  MAX_SIZE_TEST: 1000
+  MAX_SIZE_TRAIN: 1000
+  MIN_SIZE_TEST: 600
+  MIN_SIZE_TRAIN: (600,)
+  PIXEL_MEAN: [102.9801, 115.9465, 122.7717]
+  PIXEL_STD: [1.0, 1.0, 1.0]
+  SATURATION: 0.0
+  TO_BGR255: True
+  VERTICAL_FLIP_PROB_TRAIN: 0.0
+MODEL:
+  ATTRIBUTE_ON: False
+  BACKBONE:
+    CONV_BODY: R-101-FPN
+    FREEZE_CONV_BODY_AT: 2
+  CLS_AGNOSTIC_BBOX_REG: False
+  DEVICE: cuda
+  FBNET:
+    ARCH: default
+    ARCH_DEF: 
+    BN_TYPE: bn
+    DET_HEAD_BLOCKS: []
+    DET_HEAD_LAST_SCALE: 1.0
+    DET_HEAD_STRIDE: 0
+    DW_CONV_SKIP_BN: True
+    DW_CONV_SKIP_RELU: True
+    KPTS_HEAD_BLOCKS: []
+    KPTS_HEAD_LAST_SCALE: 0.0
+    KPTS_HEAD_STRIDE: 0
+    MASK_HEAD_BLOCKS: []
+    MASK_HEAD_LAST_SCALE: 0.0
+    MASK_HEAD_STRIDE: 0
+    RPN_BN_TYPE: 
+    RPN_HEAD_BLOCKS: 0
+    SCALE_FACTOR: 1.0
+    WIDTH_DIVISOR: 1
+  FLIP_AUG: False
+  FPN:
+    USE_GN: False
+    USE_RELU: False
+  GROUP_NORM:
+    DIM_PER_GP: -1
+    EPSILON: 1e-05
+    NUM_GROUPS: 32
+  KEYPOINT_ON: False
+  MASK_ON: False
+  META_ARCHITECTURE: GeneralizedRCNN
+  PRETRAINED_DETECTOR_CKPT: checkpoint/pretrained_faster_rcnn/model_final.pth
+  RELATION_ON: True
+  RESNETS:
+    BACKBONE_OUT_CHANNELS: 256
+    DEFORMABLE_GROUPS: 1
+    NUM_GROUPS: 32
+    RES2_OUT_CHANNELS: 256
+    RES5_DILATION: 1
+    STAGE_WITH_DCN: (False, False, False, False)
+    STEM_FUNC: StemWithFixedBatchNorm
+    STEM_OUT_CHANNELS: 64
+    STRIDE_IN_1X1: False
+    TRANS_FUNC: BottleneckWithFixedBatchNorm
+    WIDTH_PER_GROUP: 8
+    WITH_MODULATED_DCN: False
+  RETINANET:
+    ANCHOR_SIZES: (32, 64, 128, 256, 512)
+    ANCHOR_STRIDES: (8, 16, 32, 64, 128)
+    ASPECT_RATIOS: (0.5, 1.0, 2.0)
+    BBOX_REG_BETA: 0.11
+    BBOX_REG_WEIGHT: 4.0
+    BG_IOU_THRESHOLD: 0.4
+    FG_IOU_THRESHOLD: 0.5
+    INFERENCE_TH: 0.05
+    LOSS_ALPHA: 0.25
+    LOSS_GAMMA: 2.0
+    NMS_TH: 0.4
+    NUM_CLASSES: 81
+    NUM_CONVS: 4
+    OCTAVE: 2.0
+    PRE_NMS_TOP_N: 1000
+    PRIOR_PROB: 0.01
+    SCALES_PER_OCTAVE: 3
+    STRADDLE_THRESH: 0
+    USE_C5: True
+  RETINANET_ON: False
+  ROI_ATTRIBUTE_HEAD:
+    ATTRIBUTE_BGFG_RATIO: 3
+    ATTRIBUTE_BGFG_SAMPLE: True
+    ATTRIBUTE_LOSS_WEIGHT: 1.0
+    FEATURE_EXTRACTOR: FPN2MLPFeatureExtractor
+    MAX_ATTRIBUTES: 10
+    NUM_ATTRIBUTES: 201
+    POS_WEIGHT: 50.0
+    PREDICTOR: FPNPredictor
+    SHARE_BOX_FEATURE_EXTRACTOR: True
+    USE_BINARY_LOSS: True
+  ROI_BOX_HEAD:
+    CONV_HEAD_DIM: 256
+    DILATION: 1
+    FEATURE_EXTRACTOR: FPN2MLPFeatureExtractor
+    MLP_HEAD_DIM: 4096
+    NUM_CLASSES: 151
+    NUM_STACKED_CONVS: 4
+    POOLER_RESOLUTION: 7
+    POOLER_SAMPLING_RATIO: 2
+    POOLER_SCALES: (0.25, 0.125, 0.0625, 0.03125)
+    PREDICTOR: FPNPredictor
+    USE_GN: False
+  ROI_HEADS:
+    BATCH_SIZE_PER_IMAGE: 256
+    BBOX_REG_WEIGHTS: (10.0, 10.0, 5.0, 5.0)
+    BG_IOU_THRESHOLD: 0.3
+    DETECTIONS_PER_IMG: 80
+    FG_IOU_THRESHOLD: 0.5
+    NMS: 0.3
+    NMS_FILTER_DUPLICATES: True
+    POSITIVE_FRACTION: 0.5
+    POST_NMS_PER_CLS_TOPN: 300
+    SCORE_THRESH: 0.01
+    USE_FPN: True
+  ROI_KEYPOINT_HEAD:
+    CONV_LAYERS: (512, 512, 512, 512, 512, 512, 512, 512)
+    FEATURE_EXTRACTOR: KeypointRCNNFeatureExtractor
+    MLP_HEAD_DIM: 1024
+    NUM_CLASSES: 17
+    POOLER_RESOLUTION: 14
+    POOLER_SAMPLING_RATIO: 0
+    POOLER_SCALES: (0.0625,)
+    PREDICTOR: KeypointRCNNPredictor
+    RESOLUTION: 14
+    SHARE_BOX_FEATURE_EXTRACTOR: True
+  ROI_MASK_HEAD:
+    CONV_LAYERS: (256, 256, 256, 256)
+    DILATION: 1
+    FEATURE_EXTRACTOR: ResNet50Conv5ROIFeatureExtractor
+    MLP_HEAD_DIM: 1024
+    POOLER_RESOLUTION: 14
+    POOLER_SAMPLING_RATIO: 0
+    POOLER_SCALES: (0.0625,)
+    POSTPROCESS_MASKS: False
+    POSTPROCESS_MASKS_THRESHOLD: 0.5
+    PREDICTOR: MaskRCNNC4Predictor
+    RESOLUTION: 14
+    SHARE_BOX_FEATURE_EXTRACTOR: True
+    USE_GN: False
+  ROI_RELATION_HEAD:
+    ADD_GTBOX_TO_PROPOSAL_IN_TRAIN: True
+    BATCH_SIZE_PER_IMAGE: 1024
+    CAUSAL:
+      CONTEXT_LAYER: motifs
+      EFFECT_ANALYSIS: True
+      EFFECT_TYPE: TDE
+      FUSION_TYPE: gate
+      SEPARATE_SPATIAL: False
+      SPATIAL_FOR_VISION: True
+    CONTEXT_DROPOUT_RATE: 0.2
+    CONTEXT_HIDDEN_DIM: 512
+    CONTEXT_OBJ_LAYER: 1
+    CONTEXT_POOLING_DIM: 4096
+    CONTEXT_REL_LAYER: 1
+    EMBED_DIM: 200
+    FEATURE_EXTRACTOR: RelationFeatureExtractor
+    LABEL_SMOOTHING_LOSS: False
+    NUM_CLASSES: 51
+    NUM_SAMPLE_PER_GT_REL: 4
+    POOLING_ALL_LEVELS: True
+    POSITIVE_FRACTION: 0.25
+    PREDICTOR: CausalAnalysisPredictor
+    PREDICT_USE_BIAS: True
+    PREDICT_USE_VISION: True
+    REL_PROP: [0.01858, 0.00057, 0.00051, 0.00109, 0.0015, 0.00489, 0.00432, 0.02913, 0.00245, 0.00121, 0.00404, 0.0011, 0.00132, 0.00172, 5e-05, 0.00242, 0.0005, 0.00048, 0.00208, 0.15608, 0.0265, 0.06091, 0.009, 0.00183, 0.00225, 0.0009, 0.00028, 0.00077, 0.04844, 0.08645, 0.31621, 0.00088, 0.00301, 0.00042, 0.00186, 0.001, 0.00027, 0.01012, 0.0001, 0.01286, 0.00647, 0.00084, 0.01077, 0.00132, 0.00069, 0.00376, 0.00214, 0.11424, 0.01205, 0.02958]
+    REQUIRE_BOX_OVERLAP: False
+    TRANSFORMER:
+      DROPOUT_RATE: 0.1
+      INNER_DIM: 2048
+      KEY_DIM: 64
+      NUM_HEAD: 8
+      OBJ_LAYER: 4
+      REL_LAYER: 2
+      VAL_DIM: 64
+    USE_GT_BOX: True
+    USE_GT_OBJECT_LABEL: True
+  RPN:
+    ANCHOR_SIZES: (32, 64, 128, 256, 512)
+    ANCHOR_STRIDE: (4, 8, 16, 32, 64)
+    ASPECT_RATIOS: (0.23232838, 0.63365731, 1.28478321, 3.15089189)
+    BATCH_SIZE_PER_IMAGE: 256
+    BG_IOU_THRESHOLD: 0.3
+    FG_IOU_THRESHOLD: 0.7
+    FPN_POST_NMS_PER_BATCH: False
+    FPN_POST_NMS_TOP_N_TEST: 1000
+    FPN_POST_NMS_TOP_N_TRAIN: 1000
+    MIN_SIZE: 0
+    NMS_THRESH: 0.7
+    POSITIVE_FRACTION: 0.5
+    POST_NMS_TOP_N_TEST: 1000
+    POST_NMS_TOP_N_TRAIN: 1000
+    PRE_NMS_TOP_N_TEST: 6000
+    PRE_NMS_TOP_N_TRAIN: 6000
+    RPN_HEAD: SingleConvRPNHead
+    RPN_MID_CHANNEL: 256
+    STRADDLE_THRESH: 0
+    USE_FPN: True
+  RPN_ONLY: False
+  VGG:
+    VGG16_OUT_CHANNELS: 512
+  WEIGHT: catalog://ImageNetPretrained/FAIR/20171220/X-101-32x8d
+OUTPUT_DIR: checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE
+PATHS_CATALOG: /root/Scene/maskrcnn_benchmark/config/paths_catalog.py
+PATHS_DATA: /root/Scene/maskrcnn_benchmark/config/../data/datasets
+SOLVER:
+  BASE_LR: 0.01
+  BIAS_LR_FACTOR: 1
+  CHECKPOINT_PERIOD: 2000
+  CLIP_NORM: 5.0
+  GAMMA: 0.1
+  GRAD_NORM_CLIP: 5.0
+  IMS_PER_BATCH: 64
+  MAX_ITER: 40000
+  MOMENTUM: 0.9
+  PRE_VAL: True
+  PRINT_GRAD_FREQ: 4000
+  SCHEDULE:
+    COOLDOWN: 0
+    FACTOR: 0.1
+    MAX_DECAY_STEP: 3
+    PATIENCE: 2
+    THRESHOLD: 0.001
+    TYPE: WarmupReduceLROnPlateau
+  STEPS: (10000, 16000)
+  TO_VAL: True
+  UPDATE_SCHEDULE_DURING_LOAD: False
+  VAL_PERIOD: 2000
+  WARMUP_FACTOR: 0.1
+  WARMUP_ITERS: 500
+  WARMUP_METHOD: linear
+  WEIGHT_DECAY: 0.0001
+  WEIGHT_DECAY_BIAS: 0.0
+TEST:
+  ALLOW_LOAD_FROM_CACHE: False
+  BBOX_AUG:
+    ENABLED: False
+    H_FLIP: False
+    MAX_SIZE: 4000
+    SCALES: ()
+    SCALE_H_FLIP: False
+  DETECTIONS_PER_IMG: 100
+  EXPECTED_RESULTS: []
+  EXPECTED_RESULTS_SIGMA_TOL: 4
+  IMS_PER_BATCH: 8
+  RELATION:
+    IOU_THRESHOLD: 0.5
+    LATER_NMS_PREDICTION_THRES: 0.5
+    MULTIPLE_PREDS: False
+    REQUIRE_OVERLAP: False
+    SYNC_GATHER: True
+  SAVE_PROPOSALS: False
+2020-06-10 09:04:05,577 maskrcnn_benchmark INFO: Saving config into: checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE/config.yml
+2020-06-10 09:04:05,609 maskrcnn_benchmark INFO: #################### prepare training ####################
+2020-06-10 09:04:08,923 maskrcnn_benchmark.data.build INFO: ----------------------------------------------------------------------------------------------------
+2020-06-10 09:04:08,923 maskrcnn_benchmark.data.build INFO: get dataset statistics...
+2020-06-10 09:04:36,134 maskrcnn_benchmark.data.build INFO: finish
+2020-06-10 09:04:36,135 maskrcnn_benchmark.data.build INFO: Save data statistics to: checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE/VG_stanford_filtered_with_attribute_train_statistics.cache
+2020-06-10 09:04:36,135 maskrcnn_benchmark.data.build INFO: ----------------------------------------------------------------------------------------------------
+2020-06-10 09:04:37,448 maskrcnn_benchmark INFO: #################### end model construction ####################
+2020-06-10 09:04:38,085 maskrcnn_benchmark INFO: #################### end optimizer and shcedule ####################
+2020-06-10 09:04:38,117 maskrcnn_benchmark INFO: #################### end distributed ####################
+2020-06-10 09:04:38,118 maskrcnn_benchmark.utils.checkpoint INFO: Loading checkpoint from checkpoint/pretrained_faster_rcnn/model_final.pth
+2020-06-10 09:04:38,972 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.box_feature_extractor.fc6.bias in current model to module.roi_heads.box.feature_extractor.fc6.bias in loaded model.
+2020-06-10 09:04:38,972 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.box_feature_extractor.fc6.weight in current model to module.roi_heads.box.feature_extractor.fc6.weight in loaded model.
+2020-06-10 09:04:38,972 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.box_feature_extractor.fc7.bias in current model to module.roi_heads.box.feature_extractor.fc7.bias in loaded model.
+2020-06-10 09:04:38,972 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.box_feature_extractor.fc7.weight in current model to module.roi_heads.box.feature_extractor.fc7.weight in loaded model.
+2020-06-10 09:04:38,972 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.bias in current model to module.roi_heads.box.feature_extractor.fc6.bias in loaded model.
+2020-06-10 09:04:38,972 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.weight in current model to module.roi_heads.box.feature_extractor.fc6.weight in loaded model.
+2020-06-10 09:04:38,972 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.bias in current model to module.roi_heads.box.feature_extractor.fc7.bias in loaded model.
+2020-06-10 09:04:38,972 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.weight in current model to module.roi_heads.box.feature_extractor.fc7.weight in loaded model.
+2020-06-10 09:04:38,972 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.bias in current model to module.roi_heads.box.feature_extractor.pooler.reduce_channel.0.bias in loaded model.
+2020-06-10 09:04:38,972 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.weight in current model to module.roi_heads.box.feature_extractor.pooler.reduce_channel.0.weight in loaded model.
+2020-06-10 09:04:39,035 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.box_feature_extractor.fc6.bias                                           loaded from roi_heads.box.feature_extractor.fc6.bias         of shape (4096,)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.box_feature_extractor.fc6.weight                                         loaded from roi_heads.box.feature_extractor.fc6.weight       of shape (4096, 12544)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.box_feature_extractor.fc7.bias                                           loaded from roi_heads.box.feature_extractor.fc7.bias         of shape (4096,)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.box_feature_extractor.fc7.weight                                         loaded from roi_heads.box.feature_extractor.fc7.weight       of shape (4096, 4096)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.avg_post_ctx of shape (4096,)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.input_linearity.bias of shape (3072,)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.input_linearity.weight of shape (3072, 5136)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.obj_embed.weight of shape (152, 200)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.out_obj.bias of shape (151,)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.out_obj.weight of shape (151, 512)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.state_linearity.bias of shape (2560,)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.state_linearity.weight of shape (2560, 512)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0 of shape (2048,)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0_reverse of shape (2048,)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0 of shape (2048,)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0_reverse of shape (2048,)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0 of shape (2048, 512)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0_reverse of shape (2048, 512)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0 of shape (2048, 4808)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0_reverse of shape (2048, 4808)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.lin_edge_h.bias of shape (512,)
+2020-06-10 09:04:39,036 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.lin_edge_h.weight of shape (512, 1024)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.lin_obj_h.bias of shape (512,)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.lin_obj_h.weight of shape (512, 1024)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0 of shape (2048,)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0_reverse of shape (2048,)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0 of shape (2048,)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0_reverse of shape (2048,)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0 of shape (2048, 512)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0_reverse of shape (2048, 512)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0 of shape (2048, 4424)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0_reverse of shape (2048, 4424)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_embed1.weight of shape (151, 200)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_embed2.weight of shape (151, 200)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.0.bias of shape (32,)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.0.weight of shape (32, 9)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.1.bias of shape (32,)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.1.num_batches_tracked of shape ()
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.1.running_mean of shape (32,)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.1.running_var of shape (32,)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.1.weight of shape (32,)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.2.bias of shape (128,)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.2.weight of shape (128, 32)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.untreated_dcd_feat of shape (4936,)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.untreated_edg_feat of shape (4296,)
+2020-06-10 09:04:39,037 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.untreated_obj_feat of shape (4424,)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.ctx_compress.bias of shape (51,)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.ctx_compress.weight of shape (51, 4096)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.ctx_gate_fc.bias of shape (51,)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.ctx_gate_fc.weight of shape (51, 4096)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.freq_bias.obj_baseline.weight of shape (22801, 51)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.post_cat.0.bias of shape (4096,)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.post_cat.0.weight of shape (4096, 1024)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.post_emb.bias of shape (1024,)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.post_emb.weight of shape (1024, 512)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.spt_emb.0.bias of shape (512,)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.spt_emb.0.weight of shape (512, 32)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.spt_emb.2.bias of shape (4096,)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.spt_emb.2.weight of shape (4096, 512)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.untreated_conv_spt of shape (4096,)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.untreated_feat of shape (4096,)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.untreated_spt of shape (32,)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.vis_compress.bias of shape (51,)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.vis_compress.weight of shape (51, 4096)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.bias                       loaded from roi_heads.box.feature_extractor.fc6.bias         of shape (4096,)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.weight                     loaded from roi_heads.box.feature_extractor.fc6.weight       of shape (4096, 12544)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.bias                       loaded from roi_heads.box.feature_extractor.fc7.bias         of shape (4096,)
+2020-06-10 09:04:39,038 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.weight                     loaded from roi_heads.box.feature_extractor.fc7.weight       of shape (4096, 4096)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.bias of shape (256,)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.weight of shape (256, 1024, 3, 3)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.0.bias of shape (128,)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.0.weight of shape (128, 2, 7, 7)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.2.bias of shape (128,)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.2.num_batches_tracked of shape ()
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.2.running_mean of shape (128,)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.2.running_var of shape (128,)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.2.weight of shape (128,)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.4.bias of shape (256,)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.4.weight of shape (256, 128, 3, 3)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.6.bias of shape (256,)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.6.num_batches_tracked of shape ()
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.6.running_mean of shape (256,)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.6.running_var of shape (256,)
+2020-06-10 09:04:39,039 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.6.weight of shape (256,)
+2020-06-10 09:04:40,192 maskrcnn_benchmark INFO: #################### end load checkpointer ####################
+2020-06-10 09:04:40,192 maskrcnn_benchmark.data.build WARNING: When using more than one image per GPU you may encounter an out-of-memory (OOM) error if your GPU does not have sufficient memory. If this happens, you can reduce SOLVER.IMS_PER_BATCH (for training) or TEST.IMS_PER_BATCH (for inference). For training, you must also adjust the learning rate and schedule length according to the linear scaling rule. See for example: https://github.com/facebookresearch/Detectron/blob/master/configs/getting_started/tutorial_1gpu_e2e_faster_rcnn_R-50-FPN.yaml#L14
+2020-06-10 09:04:42,836 maskrcnn_benchmark.utils.miscellaneous INFO: Saving labels mapping into checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE/labels.json
+2020-06-10 09:04:44,090 maskrcnn_benchmark INFO: #################### end dataloader ####################
+2020-06-10 09:04:44,090 maskrcnn_benchmark INFO: Validate before training
+2020-06-10 09:04:44,099 maskrcnn_benchmark INFO: Start evaluation on VG_stanford_filtered_with_attribute_val dataset(5000 images).
+2020-06-10 09:06:17,635 maskrcnn_benchmark INFO: Total run time: 0:01:33.535637 (0.14965701904296874 s / img per device, on 8 devices)
+2020-06-10 09:06:17,635 maskrcnn_benchmark INFO: Model inference time: 0:01:10.575044 (0.11292007064819336 s / img per device, on 8 devices)
+2020-06-10 09:07:46,691 maskrcnn_benchmark INFO: 
+====================================================================================================
+Detection evaluation mAp=0.9999
+====================================================================================================
+SGG eval:   R @ 20: 0.2350;   R @ 50: 0.2797;   R @ 100: 0.2974;  for mode=predcls, type=Recall(Main).
+SGG eval: ngR @ 20: 0.2393; ngR @ 50: 0.2830; ngR @ 100: 0.3153;  for mode=predcls, type=No Graph Constraint Recall(Main).
+SGG eval:  zR @ 20: 0.0000;  zR @ 50: 0.0000;  zR @ 100: 0.0000;  for mode=predcls, type=Zero Shot Recall.
+SGG eval:  mR @ 20: 0.0915;  mR @ 50: 0.1250;  mR @ 100: 0.1454;  for mode=predcls, type=Mean Recall.
+(above:0.1384) (across:0.0000) (against:0.0000) (along:0.0000) (and:0.1774) (at:0.4119) (attached to:0.3359) (behind:0.0478) (belonging to:0.0643) (between:0.0385) (carrying:0.4539) (covered in:0.2143) (covering:0.1265) (eating:0.5000) (flying in:0.0000) (for:0.1389) (from:0.0000) (growing on:0.2333) (hanging from:0.0000) (has:0.6083) (holding:0.0481) (in:0.0520) (in front of:0.1884) (laying on:0.0952) (looking at:0.1522) (lying on:0.0000) (made of:0.0000) (mounted on:0.0000) (near:0.2170) (of:0.1625) (on:0.3643) (on back of:0.0000) (over:0.0878) (painted on:0.0000) (parked on:0.2372) (part of:0.0000) (playing:0.0000) (riding:0.5536) (says:0.0000) (sitting on:0.4178) (standing on:0.0507) (to:0.3333) (under:0.0128) (using:0.0000) (walking in:0.0769) (walking on:0.1988) (watching:0.1078) (wearing:0.1664) (wears:0.2186) (with:0.0368) 
+SGG eval:   A @ 20: 0.3185;   A @ 50: 0.3197;   A @ 100: 0.3197;  for mode=predcls, type=TopK Accuracy.
+====================================================================================================
+
+2020-06-10 09:07:47,456 maskrcnn_benchmark INFO: Start training
+2020-06-10 09:07:49,524 maskrcnn_benchmark INFO: ---Total norm inf clip coef 0.00000-----------------
+2020-06-10 09:07:49,535 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.bias: inf, (torch.Size([51]))
+2020-06-10 09:07:49,535 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.weight: 83070.70312, (torch.Size([4096, 512]))
+2020-06-10 09:07:49,535 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.bias: 24541.57617, (torch.Size([4096]))
+2020-06-10 09:07:49,535 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.weight: 23865.15625, (torch.Size([512, 32]))
+2020-06-10 09:07:49,535 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.weight: 10595.10156, (torch.Size([51, 4096]))
+2020-06-10 09:07:49,535 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.bias: 7474.11572, (torch.Size([512]))
+2020-06-10 09:07:49,535 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_gate_fc.weight: 920.74127, (torch.Size([51, 4096]))
+2020-06-10 09:07:49,535 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.bias: 896.81366, (torch.Size([51]))
+2020-06-10 09:07:49,535 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_gate_fc.bias: 896.81366, (torch.Size([51]))
+2020-06-10 09:07:49,535 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.freq_bias.obj_baseline.weight: 41.01875, (torch.Size([22801, 51]))
+2020-06-10 09:07:49,535 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.weight: 1.34684, (torch.Size([51, 4096]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.weight: 0.84392, (torch.Size([512, 1024]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.weight: 0.81733, (torch.Size([4096, 1024]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.weight: 0.69849, (torch.Size([4096, 4096]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0: 0.43498, (torch.Size([2048, 4808]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0_reverse: 0.41860, (torch.Size([2048, 4808]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.weight: 0.34039, (torch.Size([4096, 12544]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.bias: 0.32916, (torch.Size([512]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.weight: 0.28837, (torch.Size([4096, 4096]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.weight: 0.26497, (torch.Size([4096, 12544]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.weight: 0.09148, (torch.Size([512, 1024]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0_reverse: 0.07414, (torch.Size([2048, 512]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0: 0.07137, (torch.Size([2048, 512]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.bias: 0.05117, (torch.Size([4096]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.weight: 0.04891, (torch.Size([256, 1024, 3, 3]))
+2020-06-10 09:07:49,536 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0_reverse: 0.04805, (torch.Size([2048, 4424]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0: 0.04619, (torch.Size([2048, 4424]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0: 0.04494, (torch.Size([2048]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0: 0.04494, (torch.Size([2048]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0_reverse: 0.04320, (torch.Size([2048]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0_reverse: 0.04320, (torch.Size([2048]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.weight: 0.03804, (torch.Size([1024, 512]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.bias: 0.03512, (torch.Size([512]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.bias : 0.03299, (torch.Size([1024]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.weight: 0.02444, (torch.Size([256, 128, 3, 3]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.bias: 0.01895, (torch.Size([4096]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0_reverse: 0.00811, (torch.Size([2048, 512]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0: 0.00776, (torch.Size([2048, 512]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.weight: 0.00652, (torch.Size([128, 2, 7, 7]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0_reverse: 0.00481, (torch.Size([2048]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0_reverse: 0.00481, (torch.Size([2048]))
+2020-06-10 09:07:49,537 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0: 0.00460, (torch.Size([2048]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0: 0.00460, (torch.Size([2048]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.bias: 0.00447, (torch.Size([4096]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed2.weight: 0.00350, (torch.Size([151, 200]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.bias: 0.00301, (torch.Size([4096]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.weight: 0.00217, (torch.Size([128, 32]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.bias: 0.00213, (torch.Size([256]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.bias: 0.00137, (torch.Size([4096]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.weight: 0.00120, (torch.Size([32, 9]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.bias: 0.00113, (torch.Size([128]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.bias: 0.00110, (torch.Size([256]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.bias: 0.00091, (torch.Size([128]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.bias: 0.00057, (torch.Size([32]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.weight: 0.00042, (torch.Size([256]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.bias: 0.00041, (torch.Size([128]))
+2020-06-10 09:07:49,538 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.weight: 0.00041, (torch.Size([128]))
+2020-06-10 09:07:49,539 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.bias: 0.00040, (torch.Size([256]))
+2020-06-10 09:07:49,539 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed1.weight: 0.00040, (torch.Size([151, 200]))
+2020-06-10 09:07:49,539 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.weight: 0.00020, (torch.Size([32]))
+2020-06-10 09:07:49,539 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.bias: 0.00000, (torch.Size([32]))
+2020-06-10 09:07:49,539 maskrcnn_benchmark INFO: -------------------------------
+2020-06-10 09:11:38,157 maskrcnn_benchmark INFO: eta: 12:45:09  iter: 200  loss: 0.3642 (0.6130)  auxiliary_ctx: 0.1711 (0.2972)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1903 (0.3158)  time: 1.1426 (1.1535)  data: 0.0211 (0.0276)  lr: 0.293248  max mem: 6070
+2020-06-10 09:15:28,499 maskrcnn_benchmark INFO: eta: 12:40:43  iter: 400  loss: 0.3286 (0.4783)  auxiliary_ctx: 0.1582 (0.2299)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1740 (0.2484)  time: 1.1466 (1.1526)  data: 0.0257 (0.0264)  lr: 0.523648  max mem: 6070
+2020-06-10 09:19:18,239 maskrcnn_benchmark INFO: eta: 12:36:01  iter: 600  loss: 0.3005 (0.4278)  auxiliary_ctx: 0.1419 (0.2045)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1599 (0.2232)  time: 1.1492 (1.1513)  data: 0.0253 (0.0260)  lr: 0.640000  max mem: 6130
+2020-06-10 09:23:07,967 maskrcnn_benchmark INFO: eta: 12:31:45  iter: 800  loss: 0.3227 (0.3999)  auxiliary_ctx: 0.1504 (0.1905)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1708 (0.2094)  time: 1.1369 (1.1506)  data: 0.0244 (0.0253)  lr: 0.640000  max mem: 6130
+2020-06-10 09:26:57,308 maskrcnn_benchmark INFO: eta: 12:27:24  iter: 1000  loss: 0.2865 (0.3809)  auxiliary_ctx: 0.1405 (0.1815)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1454 (0.1994)  time: 1.1396 (1.1499)  data: 0.0165 (0.0249)  lr: 0.640000  max mem: 6130
+2020-06-10 09:30:47,424 maskrcnn_benchmark INFO: eta: 12:23:38  iter: 1200  loss: 0.2797 (0.3658)  auxiliary_ctx: 0.1370 (0.1749)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1423 (0.1909)  time: 1.1503 (1.1500)  data: 0.0249 (0.0244)  lr: 0.640000  max mem: 6130
+2020-06-10 09:34:37,445 maskrcnn_benchmark INFO: eta: 12:19:49  iter: 1400  loss: 0.2894 (0.3544)  auxiliary_ctx: 0.1417 (0.1700)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1469 (0.1844)  time: 1.1530 (1.1500)  data: 0.0253 (0.0244)  lr: 0.640000  max mem: 6130
+2020-06-10 09:38:27,227 maskrcnn_benchmark INFO: eta: 12:15:54  iter: 1600  loss: 0.2852 (0.3458)  auxiliary_ctx: 0.1418 (0.1663)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1449 (0.1794)  time: 1.1462 (1.1499)  data: 0.0261 (0.0244)  lr: 0.640000  max mem: 6130
+2020-06-10 09:42:17,583 maskrcnn_benchmark INFO: eta: 12:12:12  iter: 1800  loss: 0.2885 (0.3390)  auxiliary_ctx: 0.1422 (0.1635)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1463 (0.1755)  time: 1.1614 (1.1501)  data: 0.0256 (0.0245)  lr: 0.640000  max mem: 6130
+2020-06-10 09:46:07,337 maskrcnn_benchmark INFO: eta: 12:08:17  iter: 2000  loss: 0.2743 (0.3332)  auxiliary_ctx: 0.1352 (0.1610)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1392 (0.1722)  time: 1.1485 (1.1499)  data: 0.0247 (0.0245)  lr: 0.640000  max mem: 6130
+2020-06-10 09:46:07,340 maskrcnn_benchmark.utils.checkpoint INFO: Saving checkpoint to checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE/model_0002000.pth
+2020-06-10 09:46:10,003 maskrcnn_benchmark INFO: Start validating
+2020-06-10 09:46:10,026 maskrcnn_benchmark INFO: Start evaluation on VG_stanford_filtered_with_attribute_val dataset(5000 images).
+2020-06-10 09:47:41,668 maskrcnn_benchmark INFO: Total run time: 0:01:31.642134 (0.14662741508483887 s / img per device, on 8 devices)
+2020-06-10 09:47:41,668 maskrcnn_benchmark INFO: Model inference time: 0:01:10.621488 (0.11299438018798828 s / img per device, on 8 devices)
+2020-06-10 09:49:15,555 maskrcnn_benchmark INFO: 
+====================================================================================================
+Detection evaluation mAp=0.9999
+====================================================================================================
+SGG eval:   R @ 20: 0.3179;   R @ 50: 0.4100;   R @ 100: 0.4570;  for mode=predcls, type=Recall(Main).
+SGG eval: ngR @ 20: 0.3741; ngR @ 50: 0.5314; ngR @ 100: 0.6429;  for mode=predcls, type=No Graph Constraint Recall(Main).
+SGG eval:  zR @ 20: 0.0800;  zR @ 50: 0.1207;  zR @ 100: 0.1644;  for mode=predcls, type=Zero Shot Recall.
+SGG eval:  mR @ 20: 0.1487;  mR @ 50: 0.1958;  mR @ 100: 0.2198;  for mode=predcls, type=Mean Recall.
+(above:0.2785) (across:0.0000) (against:0.0000) (along:0.2692) (and:0.0000) (at:0.7468) (attached to:0.0000) (behind:0.5210) (belonging to:0.0000) (between:0.0000) (carrying:0.3465) (covered in:0.1429) (covering:0.0000) (eating:0.0000) (flying in:0.0000) (for:0.0370) (from:0.0000) (growing on:0.0000) (hanging from:0.2721) (has:0.7315) (holding:0.6024) (in:0.3086) (in front of:0.5194) (laying on:0.0000) (looking at:0.0000) (lying on:0.0000) (made of:0.0000) (mounted on:0.0000) (near:0.0071) (of:0.6282) (on:0.3903) (on back of:0.0000) (over:0.0427) (painted on:0.0000) (parked on:0.9537) (part of:0.0000) (playing:0.0000) (riding:0.9375) (says:0.0000) (sitting on:0.5554) (standing on:0.0725) (to:0.0000) (under:0.1437) (using:0.0000) (walking in:0.0000) (walking on:0.9787) (watching:0.5098) (wearing:0.9779) (wears:0.0000) (with:0.0147) 
+SGG eval:   A @ 20: 0.5084;   A @ 50: 0.5117;   A @ 100: 0.5117;  for mode=predcls, type=TopK Accuracy.
+====================================================================================================
+
+2020-06-10 09:49:16,326 maskrcnn_benchmark INFO: Validation Result: 0.4570
+2020-06-10 09:53:05,993 maskrcnn_benchmark INFO: eta: 12:58:29  iter: 2200  loss: 0.2793 (0.3280)  auxiliary_ctx: 0.1396 (0.1588)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1397 (0.1692)  time: 1.1452 (1.2357)  data: 0.0258 (0.1104)  lr: 0.640000  max mem: 6130
+2020-06-10 09:56:56,164 maskrcnn_benchmark INFO: eta: 12:49:56  iter: 2400  loss: 0.2706 (0.3233)  auxiliary_ctx: 0.1353 (0.1569)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1353 (0.1664)  time: 1.1485 (1.2286)  data: 0.0259 (0.1032)  lr: 0.640000  max mem: 6130
+2020-06-10 10:00:46,420 maskrcnn_benchmark INFO: eta: 12:42:08  iter: 2600  loss: 0.2687 (0.3195)  auxiliary_ctx: 0.1344 (0.1554)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1344 (0.1642)  time: 1.1431 (1.2227)  data: 0.0202 (0.0970)  lr: 0.640000  max mem: 6130
+2020-06-10 10:04:36,879 maskrcnn_benchmark INFO: eta: 12:34:56  iter: 2800  loss: 0.2710 (0.3160)  auxiliary_ctx: 0.1355 (0.1539)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1355 (0.1621)  time: 1.1434 (1.2177)  data: 0.0259 (0.0919)  lr: 0.640000  max mem: 6130
+2020-06-10 10:08:26,733 maskrcnn_benchmark INFO: eta: 12:28:04  iter: 3000  loss: 0.2739 (0.3130)  auxiliary_ctx: 0.1371 (0.1527)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1369 (0.1603)  time: 1.1491 (1.2131)  data: 0.0260 (0.0874)  lr: 0.640000  max mem: 6130
+2020-06-10 10:12:17,051 maskrcnn_benchmark INFO: eta: 12:21:40  iter: 3200  loss: 0.2682 (0.3103)  auxiliary_ctx: 0.1341 (0.1516)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1341 (0.1587)  time: 1.1470 (1.2092)  data: 0.0218 (0.0834)  lr: 0.640000  max mem: 6130
+2020-06-10 10:16:07,374 maskrcnn_benchmark INFO: eta: 12:15:34  iter: 3400  loss: 0.2683 (0.3079)  auxiliary_ctx: 0.1342 (0.1506)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1339 (0.1573)  time: 1.1452 (1.2059)  data: 0.0180 (0.0799)  lr: 0.640000  max mem: 6130
+2020-06-10 10:19:57,267 maskrcnn_benchmark INFO: eta: 12:09:39  iter: 3600  loss: 0.2818 (0.3059)  auxiliary_ctx: 0.1409 (0.1498)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1409 (0.1561)  time: 1.1454 (1.2027)  data: 0.0260 (0.0768)  lr: 0.640000  max mem: 6130
+2020-06-10 10:23:46,879 maskrcnn_benchmark INFO: eta: 12:03:54  iter: 3800  loss: 0.2510 (0.3041)  auxiliary_ctx: 0.1255 (0.1490)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1255 (0.1550)  time: 1.1517 (1.1998)  data: 0.0252 (0.0740)  lr: 0.640000  max mem: 6130
+2020-06-10 10:27:37,290 maskrcnn_benchmark INFO: ---Total norm 0.15258 clip coef 32.76953-----------------
+2020-06-10 10:27:37,301 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.weight: 0.08401, (torch.Size([4096, 12544]))
+2020-06-10 10:27:37,301 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.weight: 0.06014, (torch.Size([4096, 4096]))
+2020-06-10 10:27:37,301 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.weight: 0.05172, (torch.Size([51, 4096]))
+2020-06-10 10:27:37,301 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.weight: 0.04947, (torch.Size([512, 32]))
+2020-06-10 10:27:37,301 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.weight: 0.04379, (torch.Size([4096, 1024]))
+2020-06-10 10:27:37,301 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0: 0.03897, (torch.Size([2048, 4808]))
+2020-06-10 10:27:37,301 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0_reverse: 0.03339, (torch.Size([2048, 4808]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.weight: 0.02768, (torch.Size([512, 1024]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.weight: 0.02479, (torch.Size([1024, 512]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.weight: 0.02463, (torch.Size([4096, 512]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.bias: 0.01493, (torch.Size([512]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.bias: 0.01161, (torch.Size([512]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.bias: 0.01074, (torch.Size([4096]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed2.weight: 0.00977, (torch.Size([151, 200]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.bias: 0.00916, (torch.Size([51]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0: 0.00826, (torch.Size([2048, 512]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.bias : 0.00755, (torch.Size([1024]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0_reverse: 0.00593, (torch.Size([2048, 512]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0: 0.00590, (torch.Size([2048]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0: 0.00590, (torch.Size([2048]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.bias: 0.00498, (torch.Size([4096]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0_reverse: 0.00386, (torch.Size([2048]))
+2020-06-10 10:27:37,302 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0_reverse: 0.00386, (torch.Size([2048]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.bias: 0.00173, (torch.Size([4096]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0: 0.00131, (torch.Size([2048, 4424]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.weight: 0.00116, (torch.Size([51, 4096]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0_reverse: 0.00109, (torch.Size([2048, 4424]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.weight: 0.00092, (torch.Size([512, 1024]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.weight: 0.00057, (torch.Size([256, 1024, 3, 3]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.bias: 0.00054, (torch.Size([512]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.bias: 0.00048, (torch.Size([4096]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.weight: 0.00022, (torch.Size([4096, 12544]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.weight: 0.00022, (torch.Size([4096, 4096]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0: 0.00016, (torch.Size([2048, 512]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_gate_fc.weight: 0.00016, (torch.Size([51, 4096]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0: 0.00012, (torch.Size([2048]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0: 0.00012, (torch.Size([2048]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0_reverse: 0.00007, (torch.Size([2048]))
+2020-06-10 10:27:37,303 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0_reverse: 0.00007, (torch.Size([2048]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.weight: 0.00003, (torch.Size([256, 128, 3, 3]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0_reverse: 0.00003, (torch.Size([2048, 512]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.weight: 0.00003, (torch.Size([128, 2, 7, 7]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.bias: 0.00002, (torch.Size([128]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.freq_bias.obj_baseline.weight: 0.00002, (torch.Size([22801, 51]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.bias: 0.00002, (torch.Size([51]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_gate_fc.bias: 0.00002, (torch.Size([51]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed1.weight: 0.00002, (torch.Size([151, 200]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.weight: 0.00001, (torch.Size([128, 32]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.weight: 0.00001, (torch.Size([32, 9]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.bias: 0.00001, (torch.Size([256]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.bias: 0.00001, (torch.Size([256]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.bias: 0.00001, (torch.Size([256]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.bias: 0.00000, (torch.Size([128]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.weight: 0.00000, (torch.Size([256]))
+2020-06-10 10:27:37,304 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.bias: 0.00000, (torch.Size([4096]))
+2020-06-10 10:27:37,305 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.bias: 0.00000, (torch.Size([4096]))
+2020-06-10 10:27:37,305 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.weight: 0.00000, (torch.Size([128]))
+2020-06-10 10:27:37,305 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.bias: 0.00000, (torch.Size([32]))
+2020-06-10 10:27:37,305 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.weight: 0.00000, (torch.Size([32]))
+2020-06-10 10:27:37,305 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.bias: 0.00000, (torch.Size([128]))
+2020-06-10 10:27:37,305 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.bias: 0.00000, (torch.Size([32]))
+2020-06-10 10:27:37,305 maskrcnn_benchmark INFO: -------------------------------
+2020-06-10 10:27:37,308 maskrcnn_benchmark INFO: eta: 11:58:28  iter: 4000  loss: 0.2794 (0.3024)  auxiliary_ctx: 0.1397 (0.1483)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1397 (0.1540)  time: 1.1461 (1.1975)  data: 0.0266 (0.0715)  lr: 0.640000  max mem: 6130
+2020-06-10 10:27:37,310 maskrcnn_benchmark.utils.checkpoint INFO: Saving checkpoint to checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE/model_0004000.pth
+2020-06-10 10:27:39,983 maskrcnn_benchmark INFO: Start validating
+2020-06-10 10:27:40,006 maskrcnn_benchmark INFO: Start evaluation on VG_stanford_filtered_with_attribute_val dataset(5000 images).
+2020-06-10 10:29:10,846 maskrcnn_benchmark INFO: Total run time: 0:01:30.840174 (0.14534427795410157 s / img per device, on 8 devices)
+2020-06-10 10:29:10,847 maskrcnn_benchmark INFO: Model inference time: 0:01:10.298806 (0.1124780891418457 s / img per device, on 8 devices)
+2020-06-10 10:30:46,593 maskrcnn_benchmark INFO: 
+====================================================================================================
+Detection evaluation mAp=0.9999
+====================================================================================================
+SGG eval:   R @ 20: 0.3230;   R @ 50: 0.4280;   R @ 100: 0.4850;  for mode=predcls, type=Recall(Main).
+SGG eval: ngR @ 20: 0.3748; ngR @ 50: 0.5421; ngR @ 100: 0.6683;  for mode=predcls, type=No Graph Constraint Recall(Main).
+SGG eval:  zR @ 20: 0.0911;  zR @ 50: 0.1474;  zR @ 100: 0.1926;  for mode=predcls, type=Zero Shot Recall.
+SGG eval:  mR @ 20: 0.1663;  mR @ 50: 0.2260;  mR @ 100: 0.2565;  for mode=predcls, type=Mean Recall.
+(above:0.2927) (across:0.0000) (against:0.0000) (along:0.7436) (and:0.0000) (at:0.7892) (attached to:0.0092) (behind:0.5374) (belonging to:0.0000) (between:0.0000) (carrying:0.7259) (covered in:0.2262) (covering:0.2041) (eating:0.8571) (flying in:0.0000) (for:0.0370) (from:0.0000) (growing on:0.0000) (hanging from:0.0441) (has:0.7174) (holding:0.3249) (in:0.3644) (in front of:0.4953) (laying on:0.0000) (looking at:0.1087) (lying on:0.0000) (made of:0.0000) (mounted on:0.0000) (near:0.1235) (of:0.5869) (on:0.4246) (on back of:0.0000) (over:0.0854) (painted on:0.0000) (parked on:0.6896) (part of:0.0000) (playing:0.0000) (riding:0.9107) (says:0.0000) (sitting on:0.3683) (standing on:0.0779) (to:0.0000) (under:0.2105) (using:0.1923) (walking in:0.0000) (walking on:0.9790) (watching:0.5686) (wearing:0.9790) (wears:0.0000) (with:0.1509) 
+SGG eval:   A @ 20: 0.5415;   A @ 50: 0.5459;   A @ 100: 0.5459;  for mode=predcls, type=TopK Accuracy.
+====================================================================================================
+
+2020-06-10 10:30:47,377 maskrcnn_benchmark INFO: Validation Result: 0.4850
+2020-06-10 10:34:37,253 maskrcnn_benchmark INFO: eta: 12:20:07  iter: 4200  loss: 0.2757 (0.3008)  auxiliary_ctx: 0.1379 (0.1477)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1378 (0.1531)  time: 1.1388 (1.2404)  data: 0.0254 (0.1145)  lr: 0.640000  max mem: 6130
+2020-06-10 10:38:27,454 maskrcnn_benchmark INFO: eta: 12:13:34  iter: 4400  loss: 0.2560 (0.2993)  auxiliary_ctx: 0.1281 (0.1471)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1279 (0.1523)  time: 1.1486 (1.2364)  data: 0.0256 (0.1104)  lr: 0.640000  max mem: 6130
+2020-06-10 10:42:17,919 maskrcnn_benchmark INFO: eta: 12:07:17  iter: 4600  loss: 0.2777 (0.2981)  auxiliary_ctx: 0.1390 (0.1466)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1387 (0.1516)  time: 1.1643 (1.2327)  data: 0.0254 (0.1067)  lr: 0.640000  max mem: 6130
+2020-06-10 10:46:08,001 maskrcnn_benchmark INFO: eta: 12:01:10  iter: 4800  loss: 0.2612 (0.2968)  auxiliary_ctx: 0.1307 (0.1460)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1306 (0.1507)  time: 1.1441 (1.2293)  data: 0.0246 (0.1033)  lr: 0.640000  max mem: 6346
+2020-06-10 10:49:57,826 maskrcnn_benchmark INFO: eta: 11:55:12  iter: 5000  loss: 0.2695 (0.2955)  auxiliary_ctx: 0.1349 (0.1455)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1346 (0.1500)  time: 1.1553 (1.2261)  data: 0.0253 (0.1001)  lr: 0.640000  max mem: 6346
+2020-06-10 10:53:47,777 maskrcnn_benchmark INFO: eta: 11:49:25  iter: 5200  loss: 0.2571 (0.2945)  auxiliary_ctx: 0.1283 (0.1451)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1288 (0.1494)  time: 1.1443 (1.2231)  data: 0.0262 (0.0972)  lr: 0.640000  max mem: 6346
+2020-06-10 10:57:36,988 maskrcnn_benchmark INFO: eta: 11:43:41  iter: 5400  loss: 0.2610 (0.2935)  auxiliary_ctx: 0.1307 (0.1447)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1302 (0.1488)  time: 1.1408 (1.2203)  data: 0.0258 (0.0945)  lr: 0.640000  max mem: 6346
+2020-06-10 11:01:27,170 maskrcnn_benchmark INFO: eta: 11:38:12  iter: 5600  loss: 0.2705 (0.2925)  auxiliary_ctx: 0.1354 (0.1442)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1350 (0.1482)  time: 1.1445 (1.2178)  data: 0.0265 (0.0920)  lr: 0.640000  max mem: 6346
+2020-06-10 11:05:16,722 maskrcnn_benchmark INFO: eta: 11:32:46  iter: 5800  loss: 0.2651 (0.2916)  auxiliary_ctx: 0.1337 (0.1439)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1315 (0.1477)  time: 1.1499 (1.2154)  data: 0.0163 (0.0897)  lr: 0.640000  max mem: 6346
+2020-06-10 11:09:05,870 maskrcnn_benchmark INFO: eta: 11:27:24  iter: 6000  loss: 0.2567 (0.2908)  auxiliary_ctx: 0.1290 (0.1436)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1276 (0.1472)  time: 1.1419 (1.2131)  data: 0.0247 (0.0874)  lr: 0.640000  max mem: 6346
+2020-06-10 11:09:05,873 maskrcnn_benchmark.utils.checkpoint INFO: Saving checkpoint to checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE/model_0006000.pth
+2020-06-10 11:09:08,533 maskrcnn_benchmark INFO: Start validating
+2020-06-10 11:09:08,557 maskrcnn_benchmark INFO: Start evaluation on VG_stanford_filtered_with_attribute_val dataset(5000 images).
+2020-06-10 11:10:39,897 maskrcnn_benchmark INFO: Total run time: 0:01:31.340379 (0.14614460678100585 s / img per device, on 8 devices)
+2020-06-10 11:10:39,898 maskrcnn_benchmark INFO: Model inference time: 0:01:10.229582 (0.1123673309326172 s / img per device, on 8 devices)
+2020-06-10 11:12:16,735 maskrcnn_benchmark INFO: 
+====================================================================================================
+Detection evaluation mAp=0.9999
+====================================================================================================
+SGG eval:   R @ 20: 0.3334;   R @ 50: 0.4550;   R @ 100: 0.5121;  for mode=predcls, type=Recall(Main).
+SGG eval: ngR @ 20: 0.3852; ngR @ 50: 0.5704; ngR @ 100: 0.6940;  for mode=predcls, type=No Graph Constraint Recall(Main).
+SGG eval:  zR @ 20: 0.0941;  zR @ 50: 0.1533;  zR @ 100: 0.1711;  for mode=predcls, type=Zero Shot Recall.
+SGG eval:  mR @ 20: 0.1788;  mR @ 50: 0.2315;  mR @ 100: 0.2595;  for mode=predcls, type=Mean Recall.
+(above:0.4189) (across:0.0000) (against:0.0000) (along:0.5385) (and:0.0000) (at:0.7227) (attached to:0.0000) (behind:0.5965) (belonging to:0.0000) (between:0.0000) (carrying:0.8070) (covered in:0.2976) (covering:0.1673) (eating:0.7143) (flying in:0.0000) (for:0.0000) (from:0.0000) (growing on:0.0000) (hanging from:0.2426) (has:0.7535) (holding:0.2659) (in:0.3836) (in front of:0.3876) (laying on:0.0952) (looking at:0.1739) (lying on:0.0000) (made of:0.0000) (mounted on:0.0000) (near:0.1001) (of:0.5114) (on:0.4879) (on back of:0.0000) (over:0.0691) (painted on:0.0000) (parked on:0.9106) (part of:0.0000) (playing:0.0000) (riding:0.8512) (says:0.0000) (sitting on:0.3965) (standing on:0.1511) (to:0.0000) (under:0.1986) (using:0.0385) (walking in:0.0000) (walking on:0.9699) (watching:0.6471) (wearing:0.9293) (wears:0.0000) (with:0.1460) 
+SGG eval:   A @ 20: 0.5665;   A @ 50: 0.5713;   A @ 100: 0.5713;  for mode=predcls, type=TopK Accuracy.
+====================================================================================================
+
+2020-06-10 11:12:17,517 maskrcnn_benchmark INFO: Validation Result: 0.5121
+2020-06-10 11:16:06,821 maskrcnn_benchmark INFO: eta: 11:39:33  iter: 6200  loss: 0.2646 (0.2901)  auxiliary_ctx: 0.1330 (0.1433)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1312 (0.1468)  time: 1.1395 (1.2418)  data: 0.0224 (0.1162)  lr: 0.640000  max mem: 6346
+2020-06-10 11:19:56,861 maskrcnn_benchmark INFO: eta: 11:33:49  iter: 6400  loss: 0.2588 (0.2894)  auxiliary_ctx: 0.1294 (0.1430)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1294 (0.1464)  time: 1.1495 (1.2390)  data: 0.0255 (0.1134)  lr: 0.640000  max mem: 6346
+2020-06-10 11:23:46,896 maskrcnn_benchmark INFO: eta: 11:28:11  iter: 6600  loss: 0.2560 (0.2886)  auxiliary_ctx: 0.1280 (0.1427)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1280 (0.1460)  time: 1.1447 (1.2363)  data: 0.0257 (0.1106)  lr: 0.640000  max mem: 6346
+2020-06-10 11:27:36,482 maskrcnn_benchmark INFO: eta: 11:22:38  iter: 6800  loss: 0.2575 (0.2880)  auxiliary_ctx: 0.1293 (0.1424)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1285 (0.1456)  time: 1.1455 (1.2337)  data: 0.0267 (0.1081)  lr: 0.640000  max mem: 6346
+2020-06-10 11:31:27,128 maskrcnn_benchmark INFO: eta: 11:17:15  iter: 7000  loss: 0.2589 (0.2874)  auxiliary_ctx: 0.1298 (0.1422)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1291 (0.1452)  time: 1.1494 (1.2314)  data: 0.0256 (0.1057)  lr: 0.640000  max mem: 6346
+2020-06-10 11:35:16,964 maskrcnn_benchmark INFO: eta: 11:11:54  iter: 7200  loss: 0.2698 (0.2869)  auxiliary_ctx: 0.1355 (0.1420)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1343 (0.1449)  time: 1.1423 (1.2291)  data: 0.0236 (0.1034)  lr: 0.640000  max mem: 6346
+2020-06-10 11:39:06,135 maskrcnn_benchmark INFO: eta: 11:06:35  iter: 7400  loss: 0.2632 (0.2863)  auxiliary_ctx: 0.1316 (0.1417)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1316 (0.1446)  time: 1.1388 (1.2268)  data: 0.0171 (0.1012)  lr: 0.640000  max mem: 6346
+2020-06-10 11:42:55,861 maskrcnn_benchmark INFO: eta: 11:01:23  iter: 7600  loss: 0.2745 (0.2857)  auxiliary_ctx: 0.1373 (0.1414)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1373 (0.1442)  time: 1.1569 (1.2248)  data: 0.0257 (0.0992)  lr: 0.640000  max mem: 6346
+2020-06-10 11:46:45,562 maskrcnn_benchmark INFO: eta: 10:56:15  iter: 7800  loss: 0.2575 (0.2853)  auxiliary_ctx: 0.1300 (0.1413)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1272 (0.1440)  time: 1.1469 (1.2228)  data: 0.0262 (0.0973)  lr: 0.640000  max mem: 6346
+2020-06-10 11:50:35,211 maskrcnn_benchmark INFO: ---Total norm 0.13376 clip coef 37.37962-----------------
+2020-06-10 11:50:35,222 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.weight: 0.07465, (torch.Size([4096, 12544]))
+2020-06-10 11:50:35,222 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.weight: 0.06220, (torch.Size([4096, 4096]))
+2020-06-10 11:50:35,222 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.weight: 0.03966, (torch.Size([51, 4096]))
+2020-06-10 11:50:35,222 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.weight: 0.03743, (torch.Size([51, 4096]))
+2020-06-10 11:50:35,222 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.weight: 0.03528, (torch.Size([4096, 1024]))
+2020-06-10 11:50:35,222 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0: 0.03237, (torch.Size([2048, 4808]))
+2020-06-10 11:50:35,222 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0_reverse: 0.02875, (torch.Size([2048, 4808]))
+2020-06-10 11:50:35,222 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.weight: 0.02244, (torch.Size([1024, 512]))
+2020-06-10 11:50:35,222 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.weight: 0.01973, (torch.Size([512, 1024]))
+2020-06-10 11:50:35,222 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.weight: 0.01788, (torch.Size([256, 1024, 3, 3]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.weight: 0.01480, (torch.Size([4096, 12544]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.weight: 0.01464, (torch.Size([4096, 4096]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.weight: 0.01308, (torch.Size([512, 32]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.weight: 0.01205, (torch.Size([4096, 512]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed2.weight: 0.00867, (torch.Size([151, 200]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0: 0.00740, (torch.Size([2048, 512]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_gate_fc.weight: 0.00634, (torch.Size([51, 4096]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.bias : 0.00606, (torch.Size([1024]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.bias: 0.00579, (torch.Size([4096]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.bias: 0.00570, (torch.Size([51]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.bias: 0.00564, (torch.Size([512]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0_reverse: 0.00549, (torch.Size([2048, 512]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.bias: 0.00417, (torch.Size([4096]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.bias: 0.00275, (torch.Size([512]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0_reverse: 0.00258, (torch.Size([2048]))
+2020-06-10 11:50:35,223 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0_reverse: 0.00258, (torch.Size([2048]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0: 0.00249, (torch.Size([2048]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0: 0.00249, (torch.Size([2048]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.bias: 0.00162, (torch.Size([51]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_gate_fc.bias: 0.00162, (torch.Size([51]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.bias: 0.00154, (torch.Size([4096]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.bias: 0.00094, (torch.Size([512]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.freq_bias.obj_baseline.weight: 0.00093, (torch.Size([22801, 51]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.weight: 0.00084, (torch.Size([512, 1024]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.bias: 0.00041, (torch.Size([4096]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0: 0.00039, (torch.Size([2048, 4424]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0_reverse: 0.00038, (torch.Size([2048, 4424]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.bias: 0.00029, (torch.Size([256]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.bias: 0.00028, (torch.Size([256]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.bias: 0.00026, (torch.Size([4096]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.bias: 0.00010, (torch.Size([4096]))
+2020-06-10 11:50:35,224 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0: 0.00009, (torch.Size([2048]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0: 0.00009, (torch.Size([2048]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0_reverse: 0.00008, (torch.Size([2048]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0_reverse: 0.00008, (torch.Size([2048]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.weight: 0.00007, (torch.Size([128, 2, 7, 7]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0: 0.00006, (torch.Size([2048, 512]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0_reverse: 0.00004, (torch.Size([2048, 512]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.weight: 0.00003, (torch.Size([256, 128, 3, 3]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.weight: 0.00001, (torch.Size([128]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.bias: 0.00001, (torch.Size([128]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.weight: 0.00000, (torch.Size([256]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.bias: 0.00000, (torch.Size([128]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.bias: 0.00000, (torch.Size([128]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed1.weight: 0.00000, (torch.Size([151, 200]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.weight: 0.00000, (torch.Size([128, 32]))
+2020-06-10 11:50:35,225 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.bias: 0.00000, (torch.Size([32]))
+2020-06-10 11:50:35,226 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.bias: 0.00000, (torch.Size([256]))
+2020-06-10 11:50:35,226 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.weight: 0.00000, (torch.Size([32, 9]))
+2020-06-10 11:50:35,226 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.weight: 0.00000, (torch.Size([32]))
+2020-06-10 11:50:35,226 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.bias: 0.00000, (torch.Size([32]))
+2020-06-10 11:50:35,226 maskrcnn_benchmark INFO: -------------------------------
+2020-06-10 11:50:35,229 maskrcnn_benchmark INFO: eta: 10:51:11  iter: 8000  loss: 0.2689 (0.2847)  auxiliary_ctx: 0.1352 (0.1411)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1337 (0.1437)  time: 1.1373 (1.2210)  data: 0.0243 (0.0954)  lr: 0.640000  max mem: 6346
+2020-06-10 11:50:35,231 maskrcnn_benchmark.utils.checkpoint INFO: Saving checkpoint to checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE/model_0008000.pth
+2020-06-10 11:50:37,708 maskrcnn_benchmark INFO: Start validating
+2020-06-10 11:50:37,732 maskrcnn_benchmark INFO: Start evaluation on VG_stanford_filtered_with_attribute_val dataset(5000 images).
+2020-06-10 11:52:07,679 maskrcnn_benchmark INFO: Total run time: 0:01:29.946186 (0.14391389694213866 s / img per device, on 8 devices)
+2020-06-10 11:52:07,679 maskrcnn_benchmark INFO: Model inference time: 0:01:10.198292 (0.11231726684570313 s / img per device, on 8 devices)
+2020-06-10 11:53:44,741 maskrcnn_benchmark INFO: 
+====================================================================================================
+Detection evaluation mAp=0.9999
+====================================================================================================
+SGG eval:   R @ 20: 0.3415;   R @ 50: 0.4735;   R @ 100: 0.5421;  for mode=predcls, type=Recall(Main).
+SGG eval: ngR @ 20: 0.3986; ngR @ 50: 0.5969; ngR @ 100: 0.7354;  for mode=predcls, type=No Graph Constraint Recall(Main).
+SGG eval:  zR @ 20: 0.0600;  zR @ 50: 0.1000;  zR @ 100: 0.1222;  for mode=predcls, type=Zero Shot Recall.
+SGG eval:  mR @ 20: 0.1914;  mR @ 50: 0.2440;  mR @ 100: 0.2704;  for mode=predcls, type=Mean Recall.
+(above:0.3734) (across:0.0000) (against:0.0000) (along:0.5897) (and:0.0000) (at:0.7564) (attached to:0.0000) (behind:0.5165) (belonging to:0.0000) (between:0.0000) (carrying:0.7807) (covered in:0.4048) (covering:0.3333) (eating:0.7143) (flying in:0.0000) (for:0.0000) (from:0.0000) (growing on:0.0000) (hanging from:0.0956) (has:0.7399) (holding:0.4178) (in:0.3401) (in front of:0.4766) (laying on:0.0000) (looking at:0.1739) (lying on:0.0000) (made of:0.0000) (mounted on:0.0000) (near:0.1400) (of:0.5573) (on:0.5433) (on back of:0.0227) (over:0.0732) (painted on:0.0000) (parked on:0.9296) (part of:0.0000) (playing:0.0000) (riding:0.8467) (says:0.0000) (sitting on:0.5545) (standing on:0.1522) (to:0.0000) (under:0.2564) (using:0.0385) (walking in:0.0000) (walking on:0.9614) (watching:0.6471) (wearing:0.9262) (wears:0.0000) (with:0.1559) 
+SGG eval:   A @ 20: 0.5992;   A @ 50: 0.6040;   A @ 100: 0.6040;  for mode=predcls, type=TopK Accuracy.
+====================================================================================================
+
+2020-06-10 11:53:45,505 maskrcnn_benchmark INFO: Validation Result: 0.5421
+2020-06-10 11:57:35,006 maskrcnn_benchmark INFO: eta: 10:58:27  iter: 8200  loss: 0.2553 (0.2842)  auxiliary_ctx: 0.1290 (0.1409)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1263 (0.1434)  time: 1.1487 (1.2424)  data: 0.0193 (0.1168)  lr: 0.640000  max mem: 6346
+2020-06-10 12:01:24,362 maskrcnn_benchmark INFO: eta: 10:53:07  iter: 8400  loss: 0.2525 (0.2837)  auxiliary_ctx: 0.1277 (0.1407)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1255 (0.1430)  time: 1.1513 (1.2401)  data: 0.0260 (0.1146)  lr: 0.640000  max mem: 6346
+2020-06-10 12:05:14,192 maskrcnn_benchmark INFO: eta: 10:47:52  iter: 8600  loss: 0.2603 (0.2833)  auxiliary_ctx: 0.1302 (0.1405)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1302 (0.1428)  time: 1.1283 (1.2380)  data: 0.0256 (0.1125)  lr: 0.640000  max mem: 6346
+2020-06-10 12:09:03,921 maskrcnn_benchmark INFO: eta: 10:42:41  iter: 8800  loss: 0.2602 (0.2829)  auxiliary_ctx: 0.1312 (0.1404)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1288 (0.1425)  time: 1.1530 (1.2360)  data: 0.0253 (0.1105)  lr: 0.640000  max mem: 6370
+2020-06-10 12:12:53,148 maskrcnn_benchmark INFO: eta: 10:37:32  iter: 9000  loss: 0.2684 (0.2825)  auxiliary_ctx: 0.1362 (0.1402)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1322 (0.1423)  time: 1.1414 (1.2340)  data: 0.0253 (0.1086)  lr: 0.640000  max mem: 6370
+2020-06-10 12:16:42,837 maskrcnn_benchmark INFO: eta: 10:32:28  iter: 9200  loss: 0.2723 (0.2820)  auxiliary_ctx: 0.1376 (0.1401)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1347 (0.1420)  time: 1.1433 (1.2321)  data: 0.0241 (0.1067)  lr: 0.640000  max mem: 6370
+2020-06-10 12:20:33,025 maskrcnn_benchmark INFO: eta: 10:27:29  iter: 9400  loss: 0.2680 (0.2816)  auxiliary_ctx: 0.1360 (0.1399)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1315 (0.1417)  time: 1.1480 (1.2304)  data: 0.0254 (0.1049)  lr: 0.640000  max mem: 6370
+2020-06-10 12:24:22,805 maskrcnn_benchmark INFO: eta: 10:22:31  iter: 9600  loss: 0.2673 (0.2813)  auxiliary_ctx: 0.1357 (0.1398)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1316 (0.1415)  time: 1.1436 (1.2287)  data: 0.0210 (0.1032)  lr: 0.640000  max mem: 6370
+2020-06-10 12:28:12,616 maskrcnn_benchmark INFO: eta: 10:17:37  iter: 9800  loss: 0.2504 (0.2809)  auxiliary_ctx: 0.1278 (0.1397)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1234 (0.1413)  time: 1.1519 (1.2271)  data: 0.0185 (0.1016)  lr: 0.640000  max mem: 6370
+2020-06-10 12:32:02,515 maskrcnn_benchmark INFO: eta: 10:12:45  iter: 10000  loss: 0.2468 (0.2806)  auxiliary_ctx: 0.1255 (0.1395)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1230 (0.1410)  time: 1.1404 (1.2255)  data: 0.0253 (0.1000)  lr: 0.640000  max mem: 6388
+2020-06-10 12:32:02,518 maskrcnn_benchmark.utils.checkpoint INFO: Saving checkpoint to checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE/model_0010000.pth
+2020-06-10 12:32:05,115 maskrcnn_benchmark INFO: Start validating
+2020-06-10 12:32:05,139 maskrcnn_benchmark INFO: Start evaluation on VG_stanford_filtered_with_attribute_val dataset(5000 images).
+2020-06-10 12:33:35,851 maskrcnn_benchmark INFO: Total run time: 0:01:30.711370 (0.14513819160461425 s / img per device, on 8 devices)
+2020-06-10 12:33:35,852 maskrcnn_benchmark INFO: Model inference time: 0:01:10.505076 (0.11280812149047852 s / img per device, on 8 devices)
+2020-06-10 12:35:10,823 maskrcnn_benchmark INFO: 
+====================================================================================================
+Detection evaluation mAp=0.9999
+====================================================================================================
+SGG eval:   R @ 20: 0.2921;   R @ 50: 0.4159;   R @ 100: 0.4814;  for mode=predcls, type=Recall(Main).
+SGG eval: ngR @ 20: 0.3416; ngR @ 50: 0.5315; ngR @ 100: 0.6705;  for mode=predcls, type=No Graph Constraint Recall(Main).
+SGG eval:  zR @ 20: 0.0556;  zR @ 50: 0.0867;  zR @ 100: 0.1089;  for mode=predcls, type=Zero Shot Recall.
+SGG eval:  mR @ 20: 0.1809;  mR @ 50: 0.2429;  mR @ 100: 0.2774;  for mode=predcls, type=Mean Recall.
+(above:0.1337) (across:0.0000) (against:0.0000) (along:0.6667) (and:0.0000) (at:0.7362) (attached to:0.0000) (behind:0.5770) (belonging to:0.0000) (between:0.0000) (carrying:0.6053) (covered in:0.2976) (covering:0.2578) (eating:0.7143) (flying in:0.0000) (for:0.0370) (from:0.0000) (growing on:0.0000) (hanging from:0.4449) (has:0.6914) (holding:0.5511) (in:0.3994) (in front of:0.4487) (laying on:0.0000) (looking at:0.1522) (lying on:0.0000) (made of:0.0000) (mounted on:0.0000) (near:0.1454) (of:0.5168) (on:0.4120) (on back of:0.0227) (over:0.1220) (painted on:0.0000) (parked on:0.9250) (part of:0.0000) (playing:0.0000) (riding:0.8929) (says:0.0000) (sitting on:0.5597) (standing on:0.1214) (to:0.0000) (under:0.3699) (using:0.2692) (walking in:0.0769) (walking on:0.9487) (watching:0.6275) (wearing:0.9277) (wears:0.0000) (with:0.2214) 
+SGG eval:   A @ 20: 0.5491;   A @ 50: 0.5534;   A @ 100: 0.5534;  for mode=predcls, type=TopK Accuracy.
+====================================================================================================
+
+2020-06-10 12:35:11,598 maskrcnn_benchmark INFO: Validation Result: 0.4814
+2020-06-10 12:39:01,277 maskrcnn_benchmark INFO: eta: 10:17:07  iter: 10200  loss: 0.2511 (0.2802)  auxiliary_ctx: 0.1283 (0.1394)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1242 (0.1408)  time: 1.1523 (1.2425)  data: 0.0245 (0.1171)  lr: 0.640000  max mem: 6388
+2020-06-10 12:42:51,155 maskrcnn_benchmark INFO: eta: 10:12:05  iter: 10400  loss: 0.2611 (0.2799)  auxiliary_ctx: 0.1333 (0.1393)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1294 (0.1406)  time: 1.1475 (1.2407)  data: 0.0253 (0.1153)  lr: 0.640000  max mem: 6388
+2020-06-10 12:46:45,151 maskrcnn_benchmark INFO: eta: 10:07:18  iter: 10600  loss: 0.2619 (0.2796)  auxiliary_ctx: 0.1328 (0.1392)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1289 (0.1404)  time: 1.1421 (1.2394)  data: 0.0241 (0.1136)  lr: 0.640000  max mem: 6388
+2020-06-10 12:50:35,204 maskrcnn_benchmark INFO: eta: 10:02:22  iter: 10800  loss: 0.2625 (0.2793)  auxiliary_ctx: 0.1339 (0.1391)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1288 (0.1402)  time: 1.1393 (1.2378)  data: 0.0242 (0.1119)  lr: 0.640000  max mem: 6388
+2020-06-10 12:54:25,172 maskrcnn_benchmark INFO: eta: 9:57:28  iter: 11000  loss: 0.2615 (0.2789)  auxiliary_ctx: 0.1328 (0.1390)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1282 (0.1399)  time: 1.1493 (1.2362)  data: 0.0260 (0.1103)  lr: 0.640000  max mem: 6388
+2020-06-10 12:58:15,584 maskrcnn_benchmark INFO: eta: 9:52:38  iter: 11200  loss: 0.2740 (0.2787)  auxiliary_ctx: 0.1395 (0.1389)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1345 (0.1398)  time: 1.1526 (1.2347)  data: 0.0248 (0.1088)  lr: 0.640000  max mem: 6388
+2020-06-10 13:02:06,055 maskrcnn_benchmark INFO: eta: 9:47:49  iter: 11400  loss: 0.2647 (0.2784)  auxiliary_ctx: 0.1346 (0.1388)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1301 (0.1396)  time: 1.1580 (1.2332)  data: 0.0231 (0.1073)  lr: 0.640000  max mem: 6388
+2020-06-10 13:05:56,260 maskrcnn_benchmark INFO: eta: 9:43:02  iter: 11600  loss: 0.2478 (0.2781)  auxiliary_ctx: 0.1252 (0.1387)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1208 (0.1394)  time: 1.1542 (1.2318)  data: 0.0208 (0.1059)  lr: 0.640000  max mem: 6395
+2020-06-10 13:09:45,707 maskrcnn_benchmark INFO: eta: 9:38:16  iter: 11800  loss: 0.2560 (0.2778)  auxiliary_ctx: 0.1307 (0.1386)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1266 (0.1392)  time: 1.1439 (1.2304)  data: 0.0255 (0.1045)  lr: 0.640000  max mem: 6395
+2020-06-10 13:13:35,899 maskrcnn_benchmark INFO: ---Total norm 0.16226 clip coef 30.81419-----------------
+2020-06-10 13:13:35,909 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.weight: 0.09263, (torch.Size([4096, 12544]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.weight: 0.06514, (torch.Size([4096, 4096]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.weight: 0.06361, (torch.Size([51, 4096]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.weight: 0.04829, (torch.Size([512, 32]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.weight: 0.04541, (torch.Size([4096, 1024]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0_reverse: 0.03189, (torch.Size([2048, 4808]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0: 0.02864, (torch.Size([2048, 4808]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.weight: 0.02746, (torch.Size([1024, 512]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.weight: 0.02550, (torch.Size([4096, 512]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.weight: 0.02324, (torch.Size([512, 1024]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.bias: 0.01202, (torch.Size([512]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.bias: 0.01096, (torch.Size([4096]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.weight: 0.01042, (torch.Size([4096, 12544]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.weight: 0.01001, (torch.Size([51, 4096]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.bias: 0.00994, (torch.Size([512]))
+2020-06-10 13:13:35,910 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.weight: 0.00978, (torch.Size([4096, 4096]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.bias: 0.00976, (torch.Size([51]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed2.weight: 0.00951, (torch.Size([151, 200]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.weight: 0.00932, (torch.Size([256, 1024, 3, 3]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.bias : 0.00918, (torch.Size([1024]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.bias: 0.00819, (torch.Size([4096]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0_reverse: 0.00739, (torch.Size([2048, 512]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0: 0.00634, (torch.Size([2048, 512]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0_reverse: 0.00506, (torch.Size([2048]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0_reverse: 0.00506, (torch.Size([2048]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0: 0.00392, (torch.Size([2048]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0: 0.00392, (torch.Size([2048]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_gate_fc.weight: 0.00244, (torch.Size([51, 4096]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.bias: 0.00223, (torch.Size([4096]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.bias: 0.00078, (torch.Size([512]))
+2020-06-10 13:13:35,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.weight: 0.00075, (torch.Size([512, 1024]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.bias: 0.00055, (torch.Size([4096]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.bias: 0.00046, (torch.Size([51]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_gate_fc.bias: 0.00046, (torch.Size([51]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.freq_bias.obj_baseline.weight: 0.00035, (torch.Size([22801, 51]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.bias: 0.00028, (torch.Size([4096]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.bias: 0.00026, (torch.Size([256]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.bias: 0.00021, (torch.Size([256]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.bias: 0.00016, (torch.Size([4096]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0_reverse: 0.00009, (torch.Size([2048, 4424]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0: 0.00008, (torch.Size([2048, 4424]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0_reverse: 0.00003, (torch.Size([2048]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0_reverse: 0.00003, (torch.Size([2048]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0: 0.00002, (torch.Size([2048]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0: 0.00002, (torch.Size([2048]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0_reverse: 0.00002, (torch.Size([2048, 512]))
+2020-06-10 13:13:35,912 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0: 0.00001, (torch.Size([2048, 512]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.weight: 0.00000, (torch.Size([256, 128, 3, 3]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.bias: 0.00000, (torch.Size([128]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.weight: 0.00000, (torch.Size([256]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.bias: 0.00000, (torch.Size([128]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.weight: 0.00000, (torch.Size([128, 2, 7, 7]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed1.weight: 0.00000, (torch.Size([151, 200]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.weight: 0.00000, (torch.Size([128]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.bias: 0.00000, (torch.Size([128]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.bias: 0.00000, (torch.Size([256]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.weight: 0.00000, (torch.Size([128, 32]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.bias: 0.00000, (torch.Size([32]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.weight: 0.00000, (torch.Size([32, 9]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.bias: 0.00000, (torch.Size([32]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.weight: 0.00000, (torch.Size([32]))
+2020-06-10 13:13:35,913 maskrcnn_benchmark INFO: -------------------------------
+2020-06-10 13:13:35,916 maskrcnn_benchmark INFO: eta: 9:33:33  iter: 12000  loss: 0.2525 (0.2776)  auxiliary_ctx: 0.1288 (0.1385)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1237 (0.1390)  time: 1.1512 (1.2290)  data: 0.0250 (0.1031)  lr: 0.640000  max mem: 6395
+2020-06-10 13:13:35,919 maskrcnn_benchmark.utils.checkpoint INFO: Saving checkpoint to checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE/model_0012000.pth
+2020-06-10 13:13:38,670 maskrcnn_benchmark INFO: Start validating
+2020-06-10 13:13:38,687 maskrcnn_benchmark INFO: Start evaluation on VG_stanford_filtered_with_attribute_val dataset(5000 images).
+2020-06-10 13:15:08,979 maskrcnn_benchmark INFO: Total run time: 0:01:30.291744 (0.14446679000854493 s / img per device, on 8 devices)
+2020-06-10 13:15:08,979 maskrcnn_benchmark INFO: Model inference time: 0:01:10.603725 (0.11296595993041993 s / img per device, on 8 devices)
+2020-06-10 13:16:46,178 maskrcnn_benchmark INFO: 
+====================================================================================================
+Detection evaluation mAp=0.9999
+====================================================================================================
+SGG eval:   R @ 20: 0.3406;   R @ 50: 0.4751;   R @ 100: 0.5370;  for mode=predcls, type=Recall(Main).
+SGG eval: ngR @ 20: 0.3785; ngR @ 50: 0.5679; ngR @ 100: 0.6883;  for mode=predcls, type=No Graph Constraint Recall(Main).
+SGG eval:  zR @ 20: 0.0733;  zR @ 50: 0.0822;  zR @ 100: 0.1156;  for mode=predcls, type=Zero Shot Recall.
+SGG eval:  mR @ 20: 0.1662;  mR @ 50: 0.2308;  mR @ 100: 0.2718;  for mode=predcls, type=Mean Recall.
+(above:0.2289) (across:0.0000) (against:0.0000) (along:0.7051) (and:0.0000) (at:0.6823) (attached to:0.0138) (behind:0.5872) (belonging to:0.0000) (between:0.0000) (carrying:0.8070) (covered in:0.5238) (covering:0.3429) (eating:0.8571) (flying in:0.0000) (for:0.0370) (from:0.0000) (growing on:0.0000) (hanging from:0.5441) (has:0.6214) (holding:0.2737) (in:0.3059) (in front of:0.5441) (laying on:0.0476) (looking at:0.0652) (lying on:0.0000) (made of:0.0000) (mounted on:0.0000) (near:0.0605) (of:0.3349) (on:0.5936) (on back of:0.0455) (over:0.0854) (painted on:0.0000) (parked on:0.7736) (part of:0.0000) (playing:0.0000) (riding:0.9107) (says:0.0000) (sitting on:0.4026) (standing on:0.2283) (to:0.0000) (under:0.3469) (using:0.0385) (walking in:0.0000) (walking on:0.9015) (watching:0.5098) (wearing:0.8973) (wears:0.0000) (with:0.2728) 
+SGG eval:   A @ 20: 0.5894;   A @ 50: 0.5943;   A @ 100: 0.5943;  for mode=predcls, type=TopK Accuracy.
+====================================================================================================
+
+2020-06-10 13:16:46,950 maskrcnn_benchmark INFO: Validation Result: 0.5370
+2020-06-10 13:16:46,951 maskrcnn_benchmark INFO: Trigger Schedule Decay, RL has been reduced by factor 0.1
+2020-06-10 13:20:36,360 maskrcnn_benchmark INFO: eta: 9:36:05  iter: 12200  loss: 0.2390 (0.2771)  auxiliary_ctx: 0.1209 (0.1383)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1182 (0.1388)  time: 1.1457 (1.2434)  data: 0.0250 (0.1175)  lr: 0.064000  max mem: 6395
+2020-06-10 13:24:26,376 maskrcnn_benchmark INFO: eta: 9:31:15  iter: 12400  loss: 0.2506 (0.2767)  auxiliary_ctx: 0.1272 (0.1381)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1233 (0.1385)  time: 1.1500 (1.2418)  data: 0.0252 (0.1160)  lr: 0.064000  max mem: 6395
+2020-06-10 13:28:16,885 maskrcnn_benchmark INFO: eta: 9:26:27  iter: 12600  loss: 0.2405 (0.2762)  auxiliary_ctx: 0.1216 (0.1379)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1189 (0.1382)  time: 1.1421 (1.2404)  data: 0.0235 (0.1145)  lr: 0.064000  max mem: 6395
+2020-06-10 13:32:06,786 maskrcnn_benchmark INFO: eta: 9:21:41  iter: 12800  loss: 0.2323 (0.2756)  auxiliary_ctx: 0.1190 (0.1377)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1141 (0.1379)  time: 1.1419 (1.2390)  data: 0.0255 (0.1131)  lr: 0.064000  max mem: 6395
+2020-06-10 13:35:56,945 maskrcnn_benchmark INFO: eta: 9:16:56  iter: 13000  loss: 0.2397 (0.2751)  auxiliary_ctx: 0.1214 (0.1374)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1182 (0.1376)  time: 1.1473 (1.2377)  data: 0.0180 (0.1117)  lr: 0.064000  max mem: 6395
+2020-06-10 13:39:47,544 maskrcnn_benchmark INFO: eta: 9:12:14  iter: 13200  loss: 0.2441 (0.2745)  auxiliary_ctx: 0.1235 (0.1372)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1204 (0.1373)  time: 1.1447 (1.2364)  data: 0.0230 (0.1103)  lr: 0.064000  max mem: 6395
+2020-06-10 13:43:37,945 maskrcnn_benchmark INFO: eta: 9:07:33  iter: 13400  loss: 0.2248 (0.2740)  auxiliary_ctx: 0.1142 (0.1370)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1114 (0.1371)  time: 1.1505 (1.2351)  data: 0.0217 (0.1091)  lr: 0.064000  max mem: 6395
+2020-06-10 13:47:28,315 maskrcnn_benchmark INFO: eta: 9:02:54  iter: 13600  loss: 0.2310 (0.2735)  auxiliary_ctx: 0.1164 (0.1367)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1147 (0.1368)  time: 1.1462 (1.2339)  data: 0.0252 (0.1078)  lr: 0.064000  max mem: 6395
+2020-06-10 13:51:18,677 maskrcnn_benchmark INFO: eta: 8:58:16  iter: 13800  loss: 0.2355 (0.2729)  auxiliary_ctx: 0.1193 (0.1365)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1162 (0.1365)  time: 1.1585 (1.2327)  data: 0.0253 (0.1066)  lr: 0.064000  max mem: 6405
+2020-06-10 13:55:08,355 maskrcnn_benchmark INFO: eta: 8:53:38  iter: 14000  loss: 0.2253 (0.2724)  auxiliary_ctx: 0.1150 (0.1362)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1107 (0.1362)  time: 1.1509 (1.2315)  data: 0.0225 (0.1054)  lr: 0.064000  max mem: 6405
+2020-06-10 13:55:08,358 maskrcnn_benchmark.utils.checkpoint INFO: Saving checkpoint to checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE/model_0014000.pth
+2020-06-10 13:55:10,985 maskrcnn_benchmark INFO: Start validating
+2020-06-10 13:55:11,009 maskrcnn_benchmark INFO: Start evaluation on VG_stanford_filtered_with_attribute_val dataset(5000 images).
+2020-06-10 13:56:41,296 maskrcnn_benchmark INFO: Total run time: 0:01:30.285617 (0.14445698738098145 s / img per device, on 8 devices)
+2020-06-10 13:56:41,296 maskrcnn_benchmark INFO: Model inference time: 0:01:10.815261 (0.11330441780090332 s / img per device, on 8 devices)
+2020-06-10 13:58:18,410 maskrcnn_benchmark INFO: 
+====================================================================================================
+Detection evaluation mAp=0.9999
+====================================================================================================
+SGG eval:   R @ 20: 0.3501;   R @ 50: 0.4821;   R @ 100: 0.5357;  for mode=predcls, type=Recall(Main).
+SGG eval: ngR @ 20: 0.3963; ngR @ 50: 0.5914; ngR @ 100: 0.7061;  for mode=predcls, type=No Graph Constraint Recall(Main).
+SGG eval:  zR @ 20: 0.0733;  zR @ 50: 0.1289;  zR @ 100: 0.1600;  for mode=predcls, type=Zero Shot Recall.
+SGG eval:  mR @ 20: 0.2160;  mR @ 50: 0.2829;  mR @ 100: 0.3140;  for mode=predcls, type=Mean Recall.
+(above:0.2763) (across:0.0556) (against:0.0526) (along:0.7051) (and:0.0000) (at:0.7589) (attached to:0.0211) (behind:0.5296) (belonging to:0.1833) (between:0.0000) (carrying:0.7807) (covered in:0.6667) (covering:0.2667) (eating:1.0000) (flying in:0.0000) (for:0.0000) (from:0.0000) (growing on:0.1333) (hanging from:0.5515) (has:0.6023) (holding:0.4741) (in:0.3283) (in front of:0.5288) (laying on:0.0952) (looking at:0.1739) (lying on:0.0000) (made of:0.0000) (mounted on:0.0435) (near:0.1512) (of:0.3805) (on:0.5536) (on back of:0.0455) (over:0.1585) (painted on:0.0000) (parked on:0.9471) (part of:0.0000) (playing:0.0000) (riding:0.9286) (says:0.0000) (sitting on:0.5298) (standing on:0.2033) (to:0.0000) (under:0.3316) (using:0.2692) (walking in:0.0769) (walking on:0.9710) (watching:0.6863) (wearing:0.9400) (wears:0.0000) (with:0.3012) 
+SGG eval:   A @ 20: 0.5818;   A @ 50: 0.5862;   A @ 100: 0.5862;  for mode=predcls, type=TopK Accuracy.
+====================================================================================================
+
+2020-06-10 13:58:19,184 maskrcnn_benchmark INFO: Validation Result: 0.5357
+2020-06-10 14:02:08,944 maskrcnn_benchmark INFO: eta: 8:54:49  iter: 14200  loss: 0.2322 (0.2718)  auxiliary_ctx: 0.1175 (0.1360)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1147 (0.1359)  time: 1.1548 (1.2438)  data: 0.0252 (0.1177)  lr: 0.064000  max mem: 6405
+2020-06-10 14:05:59,012 maskrcnn_benchmark INFO: eta: 8:50:07  iter: 14400  loss: 0.2228 (0.2713)  auxiliary_ctx: 0.1132 (0.1357)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1105 (0.1356)  time: 1.1525 (1.2425)  data: 0.0254 (0.1164)  lr: 0.064000  max mem: 6405
+2020-06-10 14:09:49,356 maskrcnn_benchmark INFO: eta: 8:45:27  iter: 14600  loss: 0.2247 (0.2707)  auxiliary_ctx: 0.1140 (0.1354)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1107 (0.1353)  time: 1.1497 (1.2412)  data: 0.0258 (0.1151)  lr: 0.064000  max mem: 6405
+2020-06-10 14:13:39,591 maskrcnn_benchmark INFO: eta: 8:40:48  iter: 14800  loss: 0.2281 (0.2701)  auxiliary_ctx: 0.1164 (0.1352)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1117 (0.1349)  time: 1.1522 (1.2400)  data: 0.0203 (0.1139)  lr: 0.064000  max mem: 6405
+2020-06-10 14:17:29,720 maskrcnn_benchmark INFO: eta: 8:36:10  iter: 15000  loss: 0.2202 (0.2696)  auxiliary_ctx: 0.1116 (0.1349)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1088 (0.1347)  time: 1.1410 (1.2388)  data: 0.0258 (0.1127)  lr: 0.064000  max mem: 6405
+2020-06-10 14:21:19,786 maskrcnn_benchmark INFO: eta: 8:31:33  iter: 15200  loss: 0.2118 (0.2690)  auxiliary_ctx: 0.1077 (0.1346)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1045 (0.1344)  time: 1.1539 (1.2377)  data: 0.0252 (0.1115)  lr: 0.064000  max mem: 6405
+2020-06-10 14:25:10,382 maskrcnn_benchmark INFO: eta: 8:26:59  iter: 15400  loss: 0.2065 (0.2684)  auxiliary_ctx: 0.1050 (0.1344)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1017 (0.1340)  time: 1.1464 (1.2366)  data: 0.0230 (0.1104)  lr: 0.064000  max mem: 6405
+2020-06-10 14:29:00,898 maskrcnn_benchmark INFO: eta: 8:22:25  iter: 15600  loss: 0.2070 (0.2678)  auxiliary_ctx: 0.1050 (0.1341)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1017 (0.1337)  time: 1.1496 (1.2355)  data: 0.0257 (0.1093)  lr: 0.064000  max mem: 6405
+2020-06-10 14:32:51,295 maskrcnn_benchmark INFO: eta: 8:17:52  iter: 15800  loss: 0.2121 (0.2672)  auxiliary_ctx: 0.1076 (0.1338)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1045 (0.1334)  time: 1.1547 (1.2344)  data: 0.0241 (0.1082)  lr: 0.064000  max mem: 6405
+2020-06-10 14:36:41,902 maskrcnn_benchmark INFO: ---Total norm 0.39386 clip coef 12.69495-----------------
+2020-06-10 14:36:41,913 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.weight: 0.30716, (torch.Size([4096, 12544]))
+2020-06-10 14:36:41,913 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.weight: 0.16760, (torch.Size([4096, 4096]))
+2020-06-10 14:36:41,913 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.weight: 0.10588, (torch.Size([51, 4096]))
+2020-06-10 14:36:41,913 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.weight: 0.06698, (torch.Size([4096, 1024]))
+2020-06-10 14:36:41,913 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.weight: 0.05843, (torch.Size([4096, 512]))
+2020-06-10 14:36:41,913 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0_reverse: 0.05549, (torch.Size([2048, 4808]))
+2020-06-10 14:36:41,913 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0: 0.05466, (torch.Size([2048, 4808]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.weight: 0.04116, (torch.Size([512, 32]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.weight: 0.03708, (torch.Size([1024, 512]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.weight: 0.03684, (torch.Size([512, 1024]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.bias: 0.02013, (torch.Size([512]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed2.weight: 0.01789, (torch.Size([151, 200]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.bias: 0.01700, (torch.Size([4096]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.bias : 0.01684, (torch.Size([1024]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0_reverse: 0.01431, (torch.Size([2048, 512]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0: 0.01367, (torch.Size([2048, 512]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.weight: 0.01335, (torch.Size([51, 4096]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.bias: 0.01257, (torch.Size([51]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0_reverse: 0.01210, (torch.Size([2048]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0_reverse: 0.01210, (torch.Size([2048]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0: 0.01169, (torch.Size([2048]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0: 0.01169, (torch.Size([2048]))
+2020-06-10 14:36:41,914 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.bias: 0.01104, (torch.Size([512]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.weight: 0.01090, (torch.Size([256, 1024, 3, 3]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.bias: 0.00855, (torch.Size([4096]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.bias: 0.00776, (torch.Size([4096]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.weight: 0.00726, (torch.Size([4096, 12544]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.weight: 0.00617, (torch.Size([4096, 4096]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_gate_fc.weight: 0.00486, (torch.Size([51, 4096]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.bias: 0.00186, (torch.Size([4096]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.bias: 0.00090, (torch.Size([512]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.weight: 0.00086, (torch.Size([512, 1024]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.bias: 0.00054, (torch.Size([51]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_gate_fc.bias: 0.00054, (torch.Size([51]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.freq_bias.obj_baseline.weight: 0.00041, (torch.Size([22801, 51]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.bias: 0.00026, (torch.Size([256]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.bias: 0.00020, (torch.Size([256]))
+2020-06-10 14:36:41,915 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.bias: 0.00018, (torch.Size([4096]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.bias: 0.00012, (torch.Size([4096]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0: 0.00011, (torch.Size([2048, 4424]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0_reverse: 0.00010, (torch.Size([2048, 4424]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0: 0.00004, (torch.Size([2048]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0: 0.00004, (torch.Size([2048]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0_reverse: 0.00004, (torch.Size([2048]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0_reverse: 0.00004, (torch.Size([2048]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0: 0.00002, (torch.Size([2048, 512]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0_reverse: 0.00002, (torch.Size([2048, 512]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.weight: 0.00000, (torch.Size([256, 128, 3, 3]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.bias: 0.00000, (torch.Size([128]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.bias: 0.00000, (torch.Size([128]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed1.weight: 0.00000, (torch.Size([151, 200]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.weight: 0.00000, (torch.Size([256]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.weight: 0.00000, (torch.Size([128, 2, 7, 7]))
+2020-06-10 14:36:41,916 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.weight: 0.00000, (torch.Size([128]))
+2020-06-10 14:36:41,917 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.weight: 0.00000, (torch.Size([128, 32]))
+2020-06-10 14:36:41,917 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.bias: 0.00000, (torch.Size([128]))
+2020-06-10 14:36:41,917 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.bias: 0.00000, (torch.Size([256]))
+2020-06-10 14:36:41,917 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.bias: 0.00000, (torch.Size([32]))
+2020-06-10 14:36:41,917 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.weight: 0.00000, (torch.Size([32, 9]))
+2020-06-10 14:36:41,917 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.bias: 0.00000, (torch.Size([32]))
+2020-06-10 14:36:41,917 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.weight: 0.00000, (torch.Size([32]))
+2020-06-10 14:36:41,917 maskrcnn_benchmark INFO: -------------------------------
+2020-06-10 14:36:41,920 maskrcnn_benchmark INFO: eta: 8:13:21  iter: 16000  loss: 0.2206 (0.2667)  auxiliary_ctx: 0.1118 (0.1336)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1088 (0.1331)  time: 1.1579 (1.2334)  data: 0.0205 (0.1071)  lr: 0.064000  max mem: 6405
+2020-06-10 14:36:41,923 maskrcnn_benchmark.utils.checkpoint INFO: Saving checkpoint to checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE/model_0016000.pth
+2020-06-10 14:36:44,435 maskrcnn_benchmark INFO: Start validating
+2020-06-10 14:36:44,464 maskrcnn_benchmark INFO: Start evaluation on VG_stanford_filtered_with_attribute_val dataset(5000 images).
+2020-06-10 14:38:14,484 maskrcnn_benchmark INFO: Total run time: 0:01:30.020168 (0.14403226928710938 s / img per device, on 8 devices)
+2020-06-10 14:38:14,485 maskrcnn_benchmark INFO: Model inference time: 0:01:10.565695 (0.11290511245727539 s / img per device, on 8 devices)
+2020-06-10 14:39:50,245 maskrcnn_benchmark INFO: 
+====================================================================================================
+Detection evaluation mAp=0.9999
+====================================================================================================
+SGG eval:   R @ 20: 0.3019;   R @ 50: 0.4282;   R @ 100: 0.4888;  for mode=predcls, type=Recall(Main).
+SGG eval: ngR @ 20: 0.3481; ngR @ 50: 0.5406; ngR @ 100: 0.6696;  for mode=predcls, type=No Graph Constraint Recall(Main).
+SGG eval:  zR @ 20: 0.0815;  zR @ 50: 0.1341;  zR @ 100: 0.1578;  for mode=predcls, type=Zero Shot Recall.
+SGG eval:  mR @ 20: 0.1976;  mR @ 50: 0.2624;  mR @ 100: 0.3051;  for mode=predcls, type=Mean Recall.
+(above:0.3021) (across:0.0000) (against:0.0526) (along:0.7051) (and:0.0000) (at:0.6857) (attached to:0.0190) (behind:0.5166) (belonging to:0.1762) (between:0.0000) (carrying:0.7412) (covered in:0.6667) (covering:0.2626) (eating:0.8571) (flying in:0.0000) (for:0.0370) (from:0.0000) (growing on:0.1667) (hanging from:0.3971) (has:0.5845) (holding:0.5290) (in:0.3377) (in front of:0.5330) (laying on:0.1429) (looking at:0.1304) (lying on:0.0000) (made of:0.0000) (mounted on:0.0435) (near:0.1178) (of:0.3836) (on:0.4612) (on back of:0.0455) (over:0.1220) (painted on:0.0000) (parked on:0.9616) (part of:0.0000) (playing:0.0000) (riding:0.9018) (says:0.0000) (sitting on:0.5743) (standing on:0.2098) (to:0.0556) (under:0.3852) (using:0.1923) (walking in:0.0769) (walking on:0.9650) (watching:0.6863) (wearing:0.9332) (wears:0.0000) (with:0.2960) 
+SGG eval:   A @ 20: 0.5431;   A @ 50: 0.5477;   A @ 100: 0.5477;  for mode=predcls, type=TopK Accuracy.
+====================================================================================================
+
+2020-06-10 14:39:51,018 maskrcnn_benchmark INFO: Validation Result: 0.4888
+2020-06-10 14:39:51,018 maskrcnn_benchmark INFO: Trigger Schedule Decay, RL has been reduced by factor 0.1
+2020-06-10 14:43:40,177 maskrcnn_benchmark INFO: eta: 8:13:27  iter: 16200  loss: 0.2218 (0.2662)  auxiliary_ctx: 0.1121 (0.1333)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1096 (0.1328)  time: 1.1408 (1.2440)  data: 0.0246 (0.1177)  lr: 0.006400  max mem: 6405
+2020-06-10 14:47:29,934 maskrcnn_benchmark INFO: eta: 8:08:50  iter: 16400  loss: 0.2144 (0.2655)  auxiliary_ctx: 0.1085 (0.1330)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1060 (0.1325)  time: 1.1425 (1.2428)  data: 0.0254 (0.1166)  lr: 0.006400  max mem: 6405
+2020-06-10 14:51:20,112 maskrcnn_benchmark INFO: eta: 8:04:16  iter: 16600  loss: 0.2073 (0.2649)  auxiliary_ctx: 0.1047 (0.1327)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1025 (0.1322)  time: 1.1510 (1.2417)  data: 0.0191 (0.1155)  lr: 0.006400  max mem: 6433
+2020-06-10 14:55:09,917 maskrcnn_benchmark INFO: eta: 7:59:42  iter: 16800  loss: 0.2048 (0.2642)  auxiliary_ctx: 0.1035 (0.1324)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1014 (0.1318)  time: 1.1416 (1.2406)  data: 0.0251 (0.1144)  lr: 0.006400  max mem: 6433
+2020-06-10 14:58:59,301 maskrcnn_benchmark INFO: eta: 7:55:08  iter: 17000  loss: 0.1974 (0.2636)  auxiliary_ctx: 0.1003 (0.1321)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0971 (0.1315)  time: 1.1416 (1.2395)  data: 0.0255 (0.1133)  lr: 0.006400  max mem: 6433
+2020-06-10 15:02:48,871 maskrcnn_benchmark INFO: eta: 7:50:36  iter: 17200  loss: 0.2015 (0.2629)  auxiliary_ctx: 0.1021 (0.1317)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0998 (0.1311)  time: 1.1409 (1.2385)  data: 0.0261 (0.1123)  lr: 0.006400  max mem: 6433
+2020-06-10 15:06:39,477 maskrcnn_benchmark INFO: eta: 7:46:06  iter: 17400  loss: 0.1962 (0.2622)  auxiliary_ctx: 0.0991 (0.1314)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0975 (0.1308)  time: 1.1515 (1.2375)  data: 0.0231 (0.1112)  lr: 0.006400  max mem: 6433
+2020-06-10 15:10:29,376 maskrcnn_benchmark INFO: eta: 7:41:36  iter: 17600  loss: 0.2115 (0.2616)  auxiliary_ctx: 0.1072 (0.1311)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1041 (0.1305)  time: 1.1367 (1.2365)  data: 0.0257 (0.1102)  lr: 0.006400  max mem: 6433
+2020-06-10 15:14:19,181 maskrcnn_benchmark INFO: eta: 7:37:07  iter: 17800  loss: 0.1960 (0.2609)  auxiliary_ctx: 0.0996 (0.1308)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0964 (0.1301)  time: 1.1518 (1.2355)  data: 0.0240 (0.1093)  lr: 0.006400  max mem: 6433
+2020-06-10 15:18:09,361 maskrcnn_benchmark INFO: eta: 7:32:40  iter: 18000  loss: 0.2112 (0.2603)  auxiliary_ctx: 0.1065 (0.1305)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.1047 (0.1298)  time: 1.1498 (1.2345)  data: 0.0240 (0.1083)  lr: 0.006400  max mem: 6433
+2020-06-10 15:18:09,363 maskrcnn_benchmark.utils.checkpoint INFO: Saving checkpoint to checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE/model_0018000.pth
+2020-06-10 15:18:11,934 maskrcnn_benchmark INFO: Start validating
+2020-06-10 15:18:11,964 maskrcnn_benchmark INFO: Start evaluation on VG_stanford_filtered_with_attribute_val dataset(5000 images).
+2020-06-10 15:19:41,499 maskrcnn_benchmark INFO: Total run time: 0:01:29.534733 (0.1432555721282959 s / img per device, on 8 devices)
+2020-06-10 15:19:41,500 maskrcnn_benchmark INFO: Model inference time: 0:01:10.167780 (0.11226844749450683 s / img per device, on 8 devices)
+2020-06-10 15:21:17,421 maskrcnn_benchmark INFO: 
+====================================================================================================
+Detection evaluation mAp=0.9999
+====================================================================================================
+SGG eval:   R @ 20: 0.3126;   R @ 50: 0.4339;   R @ 100: 0.4896;  for mode=predcls, type=Recall(Main).
+SGG eval: ngR @ 20: 0.3572; ngR @ 50: 0.5434; ngR @ 100: 0.6705;  for mode=predcls, type=No Graph Constraint Recall(Main).
+SGG eval:  zR @ 20: 0.0733;  zR @ 50: 0.1296;  zR @ 100: 0.1600;  for mode=predcls, type=Zero Shot Recall.
+SGG eval:  mR @ 20: 0.1973;  mR @ 50: 0.2643;  mR @ 100: 0.3035;  for mode=predcls, type=Mean Recall.
+(above:0.3352) (across:0.0000) (against:0.0526) (along:0.7051) (and:0.0000) (at:0.6958) (attached to:0.0121) (behind:0.5442) (belonging to:0.2452) (between:0.0000) (carrying:0.7215) (covered in:0.6548) (covering:0.2810) (eating:0.7143) (flying in:0.0000) (for:0.0370) (from:0.0000) (growing on:0.0333) (hanging from:0.4743) (has:0.5205) (holding:0.4923) (in:0.3262) (in front of:0.5443) (laying on:0.1905) (looking at:0.2174) (lying on:0.0000) (made of:0.0000) (mounted on:0.0435) (near:0.0906) (of:0.2626) (on:0.4915) (on back of:0.0455) (over:0.1098) (painted on:0.0000) (parked on:0.9590) (part of:0.0000) (playing:0.0000) (riding:0.9107) (says:0.0000) (sitting on:0.5623) (standing on:0.2098) (to:0.1111) (under:0.3852) (using:0.2692) (walking in:0.0769) (walking on:0.9512) (watching:0.6863) (wearing:0.9297) (wears:0.0000) (with:0.2846) 
+SGG eval:   A @ 20: 0.5429;   A @ 50: 0.5468;   A @ 100: 0.5468;  for mode=predcls, type=TopK Accuracy.
+====================================================================================================
+
+2020-06-10 15:21:18,214 maskrcnn_benchmark INFO: Validation Result: 0.4896
+2020-06-10 15:25:07,493 maskrcnn_benchmark INFO: eta: 7:31:58  iter: 18200  loss: 0.1874 (0.2596)  auxiliary_ctx: 0.0956 (0.1301)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0918 (0.1294)  time: 1.1409 (1.2440)  data: 0.0251 (0.1177)  lr: 0.006400  max mem: 6433
+2020-06-10 15:28:57,673 maskrcnn_benchmark INFO: eta: 7:27:27  iter: 18400  loss: 0.1947 (0.2589)  auxiliary_ctx: 0.0991 (0.1298)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0956 (0.1291)  time: 1.1472 (1.2429)  data: 0.0261 (0.1167)  lr: 0.006400  max mem: 6433
+2020-06-10 15:32:47,589 maskrcnn_benchmark INFO: eta: 7:22:57  iter: 18600  loss: 0.2018 (0.2583)  auxiliary_ctx: 0.1020 (0.1295)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0992 (0.1288)  time: 1.1420 (1.2419)  data: 0.0252 (0.1157)  lr: 0.006400  max mem: 6433
+2020-06-10 15:36:37,498 maskrcnn_benchmark INFO: eta: 7:18:28  iter: 18800  loss: 0.1951 (0.2577)  auxiliary_ctx: 0.0989 (0.1292)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0962 (0.1285)  time: 1.1424 (1.2410)  data: 0.0231 (0.1147)  lr: 0.006400  max mem: 6433
+2020-06-10 15:40:27,320 maskrcnn_benchmark INFO: eta: 7:13:59  iter: 19000  loss: 0.1797 (0.2570)  auxiliary_ctx: 0.0909 (0.1289)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0887 (0.1281)  time: 1.1405 (1.2400)  data: 0.0255 (0.1138)  lr: 0.006400  max mem: 6433
+2020-06-10 15:44:17,166 maskrcnn_benchmark INFO: eta: 7:09:32  iter: 19200  loss: 0.1998 (0.2564)  auxiliary_ctx: 0.1011 (0.1286)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0987 (0.1278)  time: 1.1423 (1.2390)  data: 0.0251 (0.1128)  lr: 0.006400  max mem: 6541
+2020-06-10 15:48:07,046 maskrcnn_benchmark INFO: eta: 7:05:05  iter: 19400  loss: 0.2021 (0.2558)  auxiliary_ctx: 0.1023 (0.1283)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0995 (0.1275)  time: 1.1492 (1.2381)  data: 0.0252 (0.1119)  lr: 0.006400  max mem: 6541
+2020-06-10 15:51:56,899 maskrcnn_benchmark INFO: eta: 7:00:39  iter: 19600  loss: 0.1869 (0.2551)  auxiliary_ctx: 0.0949 (0.1280)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0919 (0.1271)  time: 1.1529 (1.2372)  data: 0.0215 (0.1110)  lr: 0.006400  max mem: 6541
+2020-06-10 15:55:46,447 maskrcnn_benchmark INFO: eta: 6:56:13  iter: 19800  loss: 0.1925 (0.2545)  auxiliary_ctx: 0.0982 (0.1277)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0943 (0.1268)  time: 1.1410 (1.2363)  data: 0.0196 (0.1101)  lr: 0.006400  max mem: 6541
+2020-06-10 15:59:36,555 maskrcnn_benchmark INFO: ---Total norm 0.63699 clip coef 7.84940-----------------
+2020-06-10 15:59:36,565 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.weight: 0.54053, (torch.Size([4096, 12544]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.weight: 0.28032, (torch.Size([4096, 4096]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.weight: 0.10095, (torch.Size([51, 4096]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.weight: 0.07408, (torch.Size([4096, 1024]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0_reverse: 0.07212, (torch.Size([2048, 4808]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0: 0.06968, (torch.Size([2048, 4808]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.weight: 0.04964, (torch.Size([4096, 512]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.weight: 0.04060, (torch.Size([1024, 512]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.weight: 0.03803, (torch.Size([512, 1024]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed2.weight: 0.02313, (torch.Size([151, 200]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.weight: 0.02101, (torch.Size([512, 32]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.bias : 0.01892, (torch.Size([1024]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.bias: 0.01884, (torch.Size([512]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.bias: 0.01870, (torch.Size([4096]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0: 0.01713, (torch.Size([2048, 512]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0_reverse: 0.01581, (torch.Size([2048, 512]))
+2020-06-10 15:59:36,566 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0_reverse: 0.01229, (torch.Size([2048]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0_reverse: 0.01229, (torch.Size([2048]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.bias: 0.01220, (torch.Size([4096]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.weight: 0.01189, (torch.Size([51, 4096]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0: 0.01136, (torch.Size([2048]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0: 0.01136, (torch.Size([2048]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.bias: 0.00876, (torch.Size([51]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.weight: 0.00815, (torch.Size([256, 1024, 3, 3]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.bias: 0.00563, (torch.Size([4096]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.weight: 0.00512, (torch.Size([4096, 12544]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_gate_fc.weight: 0.00512, (torch.Size([51, 4096]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.bias: 0.00504, (torch.Size([512]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.weight: 0.00430, (torch.Size([4096, 4096]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.bias: 0.00323, (torch.Size([4096]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.bias: 0.00045, (torch.Size([51]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_gate_fc.bias: 0.00045, (torch.Size([51]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.freq_bias.obj_baseline.weight: 0.00039, (torch.Size([22801, 51]))
+2020-06-10 15:59:36,567 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.bias: 0.00018, (torch.Size([256]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.bias: 0.00017, (torch.Size([512]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.weight: 0.00016, (torch.Size([512, 1024]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.bias: 0.00014, (torch.Size([256]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0: 0.00013, (torch.Size([2048, 4424]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.bias: 0.00011, (torch.Size([4096]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0_reverse: 0.00011, (torch.Size([2048, 4424]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.bias: 0.00008, (torch.Size([4096]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0_reverse: 0.00001, (torch.Size([2048]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0_reverse: 0.00001, (torch.Size([2048]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0_reverse: 0.00001, (torch.Size([2048, 512]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0: 0.00001, (torch.Size([2048]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0: 0.00001, (torch.Size([2048]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0: 0.00000, (torch.Size([2048, 512]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.weight: 0.00000, (torch.Size([256, 128, 3, 3]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.bias: 0.00000, (torch.Size([128]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.weight: 0.00000, (torch.Size([128, 2, 7, 7]))
+2020-06-10 15:59:36,568 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed1.weight: 0.00000, (torch.Size([151, 200]))
+2020-06-10 15:59:36,569 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.bias: 0.00000, (torch.Size([128]))
+2020-06-10 15:59:36,569 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.weight: 0.00000, (torch.Size([256]))
+2020-06-10 15:59:36,569 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.bias: 0.00000, (torch.Size([128]))
+2020-06-10 15:59:36,569 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.weight: 0.00000, (torch.Size([128]))
+2020-06-10 15:59:36,569 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.bias: 0.00000, (torch.Size([256]))
+2020-06-10 15:59:36,569 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.weight: 0.00000, (torch.Size([128, 32]))
+2020-06-10 15:59:36,569 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.bias: 0.00000, (torch.Size([32]))
+2020-06-10 15:59:36,569 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.weight: 0.00000, (torch.Size([32, 9]))
+2020-06-10 15:59:36,569 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.bias: 0.00000, (torch.Size([32]))
+2020-06-10 15:59:36,569 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.weight: 0.00000, (torch.Size([32]))
+2020-06-10 15:59:36,569 maskrcnn_benchmark INFO: -------------------------------
+2020-06-10 15:59:36,572 maskrcnn_benchmark INFO: eta: 6:51:49  iter: 20000  loss: 0.1721 (0.2539)  auxiliary_ctx: 0.0872 (0.1274)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 0.0849 (0.1265)  time: 1.1494 (1.2355)  data: 0.0256 (0.1093)  lr: 0.006400  max mem: 6541
+2020-06-10 15:59:36,575 maskrcnn_benchmark.utils.checkpoint INFO: Saving checkpoint to checkpoint/precls-CausalAnalysisPredictor-motifs-gate-TDE/model_0020000.pth
+2020-06-10 15:59:39,063 maskrcnn_benchmark INFO: Start validating
+2020-06-10 15:59:39,083 maskrcnn_benchmark INFO: Start evaluation on VG_stanford_filtered_with_attribute_val dataset(5000 images).
+2020-06-10 16:01:11,274 maskrcnn_benchmark INFO: Total run time: 0:01:32.190812 (0.14750529861450196 s / img per device, on 8 devices)
+2020-06-10 16:01:11,274 maskrcnn_benchmark INFO: Model inference time: 0:01:11.409257 (0.11425481071472168 s / img per device, on 8 devices)
+2020-06-10 16:02:47,596 maskrcnn_benchmark INFO: 
+====================================================================================================
+Detection evaluation mAp=0.9999
+====================================================================================================
+SGG eval:   R @ 20: 0.3171;   R @ 50: 0.4319;   R @ 100: 0.4837;  for mode=predcls, type=Recall(Main).
+SGG eval: ngR @ 20: 0.3617; ngR @ 50: 0.5368; ngR @ 100: 0.6637;  for mode=predcls, type=No Graph Constraint Recall(Main).
+SGG eval:  zR @ 20: 0.0800;  zR @ 50: 0.1467;  zR @ 100: 0.1667;  for mode=predcls, type=Zero Shot Recall.
+SGG eval:  mR @ 20: 0.1999;  mR @ 50: 0.2637;  mR @ 100: 0.3005;  for mode=predcls, type=Mean Recall.
+(above:0.2972) (across:0.0000) (against:0.0526) (along:0.6667) (and:0.0000) (at:0.6857) (attached to:0.0213) (behind:0.5213) (belonging to:0.2726) (between:0.0000) (carrying:0.7281) (covered in:0.6548) (covering:0.2810) (eating:0.7143) (flying in:0.0000) (for:0.0370) (from:0.0000) (growing on:0.1333) (hanging from:0.4191) (has:0.4988) (holding:0.4725) (in:0.3214) (in front of:0.5336) (laying on:0.2381) (looking at:0.1739) (lying on:0.0000) (made of:0.0000) (mounted on:0.0435) (near:0.0827) (of:0.2538) (on:0.4966) (on back of:0.0455) (over:0.0854) (painted on:0.0000) (parked on:0.9511) (part of:0.0000) (playing:0.0000) (riding:0.9107) (says:0.0000) (sitting on:0.5438) (standing on:0.1815) (to:0.1389) (under:0.3495) (using:0.2885) (walking in:0.0769) (walking on:0.9527) (watching:0.6863) (wearing:0.9328) (wears:0.0000) (with:0.2813) 
+SGG eval:   A @ 20: 0.5358;   A @ 50: 0.5398;   A @ 100: 0.5398;  for mode=predcls, type=TopK Accuracy.
+====================================================================================================
+
+2020-06-10 16:02:48,361 maskrcnn_benchmark INFO: Validation Result: 0.4837
+2020-06-10 16:02:48,361 maskrcnn_benchmark INFO: Trigger Schedule Decay, RL has been reduced by factor 0.1
+2020-06-10 16:02:48,361 maskrcnn_benchmark INFO: Trigger MAX_DECAY_STEP at iteration 20000.
+2020-06-10 16:02:48,660 maskrcnn_benchmark INFO: Total training time: 6:55:01.203293 (0.6225 s / it)
+2020-06-10 16:02:50,649 maskrcnn_benchmark INFO: Start evaluation on VG_stanford_filtered_with_attribute_test dataset(26446 images).
+2020-06-10 16:10:47,150 maskrcnn_benchmark INFO: Total run time: 0:07:56.500396 (0.14414290145658235 s / img per device, on 8 devices)
+2020-06-10 16:10:47,151 maskrcnn_benchmark INFO: Model inference time: 0:06:15.216506 (0.11350419904842578 s / img per device, on 8 devices)
+2020-06-10 16:19:46,525 maskrcnn_benchmark INFO: 
+====================================================================================================
+Detection evaluation mAp=0.9995
+====================================================================================================
+SGG eval:   R @ 20: 0.3310;   R @ 50: 0.4448;   R @ 100: 0.4940;  for mode=predcls, type=Recall(Main).
+SGG eval: ngR @ 20: 0.3699; ngR @ 50: 0.5500; ngR @ 100: 0.6699;  for mode=predcls, type=No Graph Constraint Recall(Main).
+SGG eval:  zR @ 20: 0.0546;  zR @ 50: 0.0915;  zR @ 100: 0.1196;  for mode=predcls, type=Zero Shot Recall.
+SGG eval:  mR @ 20: 0.1870;  mR @ 50: 0.2586;  mR @ 100: 0.2968;  for mode=predcls, type=Mean Recall.
+(above:0.2359) (across:0.0000) (against:0.1290) (along:0.3983) (and:0.0118) (at:0.5300) (attached to:0.0349) (behind:0.6025) (belonging to:0.3707) (between:0.0208) (carrying:0.5859) (covered in:0.7157) (covering:0.3905) (eating:0.5982) (flying in:0.0000) (for:0.0779) (from:0.0000) (growing on:0.1996) (hanging from:0.3013) (has:0.5605) (holding:0.5950) (in:0.3101) (in front of:0.4260) (laying on:0.3188) (looking at:0.1727) (lying on:0.0204) (made of:0.0000) (mounted on:0.0747) (near:0.0832) (of:0.3387) (on:0.4441) (on back of:0.0236) (over:0.0794) (painted on:0.0240) (parked on:0.8800) (part of:0.0000) (playing:0.0000) (riding:0.9238) (says:0.0000) (sitting on:0.5100) (standing on:0.2499) (to:0.1127) (under:0.4299) (using:0.3739) (walking in:0.0211) (walking on:0.8770) (watching:0.6256) (wearing:0.9381) (wears:0.0000) (with:0.2256) 
+SGG eval:   A @ 20: 0.5303;   A @ 50: 0.5322;   A @ 100: 0.5322;  for mode=predcls, type=TopK Accuracy.
+====================================================================================================
+

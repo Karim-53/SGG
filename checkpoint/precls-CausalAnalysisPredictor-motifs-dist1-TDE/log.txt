@@ -1,0 +1,631 @@
+2020-06-11 09:36:37,290 maskrcnn_benchmark INFO: Using 8 GPUs
+2020-06-11 09:36:37,290 maskrcnn_benchmark INFO: Namespace(config_file='configs/e2e_relation_X_101_32_8_FPN_1x.yaml', distributed=True, local_rank=0, opts=['MODEL.ROI_RELATION_HEAD.USE_GT_BOX', 'True', 'MODEL.ROI_RELATION_HEAD.USE_GT_OBJECT_LABEL', 'True', 'MODEL.ROI_RELATION_HEAD.PREDICTOR', 'CausalAnalysisPredictor', 'MODEL.ROI_RELATION_HEAD.CAUSAL.CONTEXT_LAYER', 'motifs', 'MODEL.ROI_RELATION_HEAD.CAUSAL.FUSION_TYPE', 'dist', 'MODEL.ROI_RELATION_HEAD.CAUSAL.EFFECT_TYPE', 'TDE', 'SOLVER.IMS_PER_BATCH', '64', 'TEST.IMS_PER_BATCH', '8', 'DTYPE', 'float16', 'SOLVER.MAX_ITER', '40000', 'SOLVER.VAL_PERIOD', '2000', 'SOLVER.CHECKPOINT_PERIOD', '2000', 'GLOVE_DIR', 'glove/', 'MODEL.PRETRAINED_DETECTOR_CKPT', 'checkpoint/pretrained_faster_rcnn/model_final.pth', 'OUTPUT_DIR', 'checkpoint/precls-CausalAnalysisPredictor-motifs-dist1-TDE'], skip_test=False)
+2020-06-11 09:36:37,290 maskrcnn_benchmark INFO: Collecting env info (might take some time)
+2020-06-11 09:36:41,945 maskrcnn_benchmark INFO: 
+PyTorch version: 1.5.0+cu101
+Is debug build: No
+CUDA used to build PyTorch: 10.1
+
+OS: Ubuntu 16.04.4 LTS
+GCC version: (Ubuntu 5.4.0-6ubuntu1~16.04.10) 5.4.0 20160609
+CMake version: version 3.5.1
+
+Python version: 3.7
+Is CUDA available: Yes
+CUDA runtime version: 10.1.105
+GPU models and configuration: 
+GPU 0: GeForce RTX 2080 Ti
+GPU 1: GeForce RTX 2080 Ti
+GPU 2: GeForce RTX 2080 Ti
+GPU 3: GeForce RTX 2080 Ti
+GPU 4: GeForce RTX 2080 Ti
+GPU 5: GeForce RTX 2080 Ti
+GPU 6: GeForce RTX 2080 Ti
+GPU 7: GeForce RTX 2080 Ti
+
+Nvidia driver version: 418.67
+cuDNN version: /usr/lib/x86_64-linux-gnu/libcudnn.so.7.6.5
+
+Versions of relevant libraries:
+[pip3] numpy==1.18.5
+[pip3] torch==1.5.0+cu101
+[pip3] torchvision==0.6.0+cu101
+[conda] mkl                       2018.0.1             h19d6760_4  
+[conda] mkl-service               1.1.2            py36h17a0993_4  
+[conda] torch                     1.5.0+cu101              pypi_0    pypi
+[conda] torchvision               0.6.0+cu101              pypi_0    pypi
+        Pillow (7.1.2)
+2020-06-11 09:36:41,945 maskrcnn_benchmark INFO: Loaded configuration file configs/e2e_relation_X_101_32_8_FPN_1x.yaml
+2020-06-11 09:36:41,946 maskrcnn_benchmark INFO: 
+INPUT:
+  MIN_SIZE_TRAIN: (600,)
+  MAX_SIZE_TRAIN: 1000
+  MIN_SIZE_TEST: 600
+  MAX_SIZE_TEST: 1000
+MODEL:
+  META_ARCHITECTURE: "GeneralizedRCNN"
+  WEIGHT: "catalog://ImageNetPretrained/FAIR/20171220/X-101-32x8d"
+  BACKBONE:
+    CONV_BODY: "R-101-FPN" # VGG-16
+  RESNETS:
+    BACKBONE_OUT_CHANNELS: 256
+    STRIDE_IN_1X1: False
+    NUM_GROUPS: 32
+    WIDTH_PER_GROUP: 8
+  RELATION_ON: True
+  ATTRIBUTE_ON: False
+  FLIP_AUG: False            # if there is any left-right relation, FLIP AUG should be false
+  RPN:
+    USE_FPN: True
+    ANCHOR_SIZES: (32, 64, 128, 256, 512)
+    ANCHOR_STRIDE: (4, 8, 16, 32, 64)
+    ASPECT_RATIOS: (0.23232838, 0.63365731, 1.28478321, 3.15089189)   # from neural-motifs
+    PRE_NMS_TOP_N_TRAIN: 6000
+    PRE_NMS_TOP_N_TEST: 6000
+    POST_NMS_TOP_N_TRAIN: 1000
+    POST_NMS_TOP_N_TEST: 1000
+    FPN_POST_NMS_TOP_N_TRAIN: 1000
+    FPN_POST_NMS_TOP_N_TEST: 1000
+    FPN_POST_NMS_PER_BATCH: False
+    RPN_MID_CHANNEL: 256
+  ROI_HEADS:
+    USE_FPN: True
+    POSITIVE_FRACTION: 0.5
+    BG_IOU_THRESHOLD: 0.3
+    BATCH_SIZE_PER_IMAGE: 256
+    DETECTIONS_PER_IMG: 80
+    NMS_FILTER_DUPLICATES: True
+  ROI_BOX_HEAD:
+    POOLER_RESOLUTION: 7
+    POOLER_SCALES: (0.25, 0.125, 0.0625, 0.03125)
+    POOLER_SAMPLING_RATIO: 2
+    FEATURE_EXTRACTOR: "FPN2MLPFeatureExtractor"
+    PREDICTOR: "FPNPredictor"
+    NUM_CLASSES: 151                # 151 for VG, 1201 for GQA
+    MLP_HEAD_DIM: 4096
+  ROI_ATTRIBUTE_HEAD:
+    FEATURE_EXTRACTOR: "FPN2MLPFeatureExtractor"
+    PREDICTOR: "FPNPredictor"
+    USE_BINARY_LOSS: True           # choose binary, because cross_entropy loss deteriorate the box head, even with 0.1 weight
+    POS_WEIGHT: 50.0
+    ATTRIBUTE_LOSS_WEIGHT: 1.0
+    NUM_ATTRIBUTES: 201             # 201 for VG, 501 for GQA
+    MAX_ATTRIBUTES: 10             
+    ATTRIBUTE_BGFG_SAMPLE: True    
+    ATTRIBUTE_BGFG_RATIO: 3        
+  ROI_RELATION_HEAD:
+    USE_GT_BOX: True
+    USE_GT_OBJECT_LABEL: True
+    REQUIRE_BOX_OVERLAP: False              # for sgdet, during training, only train pairs with overlap
+    ADD_GTBOX_TO_PROPOSAL_IN_TRAIN: True    # for sgdet only, in case some gt boxes are missing
+    NUM_CLASSES: 51                 # 51 for VG, 201 for GQA (not contain "to the left of" & "to the right of")
+    BATCH_SIZE_PER_IMAGE: 1024      # sample as much as possible
+    POSITIVE_FRACTION: 0.25
+    CONTEXT_POOLING_DIM: 4096
+    CONTEXT_HIDDEN_DIM: 512         #1024 for VCTree
+    POOLING_ALL_LEVELS: True
+    LABEL_SMOOTHING_LOSS: False
+    FEATURE_EXTRACTOR: "RelationFeatureExtractor"
+    #################### Select Relationship Model ####################
+    #PREDICTOR: "MotifPredictor"
+    #PREDICTOR: "VCTreePredictor"
+    #PREDICTOR: "TransformerPredictor"
+    PREDICTOR: "CausalAnalysisPredictor"
+    ################# Parameters for Motif Predictor ##################
+    CONTEXT_OBJ_LAYER: 1
+    CONTEXT_REL_LAYER: 1
+    ############# Parameters for Causal Unbias Predictor ##############
+    ### Implementation for paper "Unbiased Scene Graph Generation from Biased Training"
+    CAUSAL:
+      EFFECT_TYPE: 'none'             # candicates: 'TDE', 'NIE', 'TE', 'none'
+      FUSION_TYPE: 'sum'              # candicates: 'sum', 'gate', 'dist'
+      SEPARATE_SPATIAL: False         # separate spatial in union feature
+      CONTEXT_LAYER: "motifs"         # candicates: motifs, vctree, vtranse
+      SPATIAL_FOR_VISION: True
+      EFFECT_ANALYSIS: True
+    ############### Parameters for Transformer Predictor ##############
+    TRANSFORMER:
+      DROPOUT_RATE: 0.1
+      OBJ_LAYER: 4
+      REL_LAYER: 2
+      NUM_HEAD: 8
+      KEY_DIM: 64
+      VAL_DIM: 64
+      INNER_DIM: 2048 
+DATASETS:
+  TRAIN: ("VG_stanford_filtered_with_attribute_train",)
+  VAL: ("VG_stanford_filtered_with_attribute_val",)
+  TEST: ("VG_stanford_filtered_with_attribute_test",)
+DATALOADER:
+  SIZE_DIVISIBILITY: 32
+SOLVER:
+  BIAS_LR_FACTOR: 1
+  BASE_LR: 0.01
+  WARMUP_FACTOR: 0.1
+  WEIGHT_DECAY: 0.0001
+  MOMENTUM: 0.9
+  GRAD_NORM_CLIP: 5.0
+  STEPS: (10000, 16000)
+  MAX_ITER: 40000
+  VAL_PERIOD: 2000
+  CHECKPOINT_PERIOD: 2000
+  PRINT_GRAD_FREQ: 4000
+  SCHEDULE:
+    # the following paramters are only used for WarmupReduceLROnPlateau
+    TYPE: "WarmupReduceLROnPlateau"    # WarmupMultiStepLR, WarmupReduceLROnPlateau
+    PATIENCE: 2
+    THRESHOLD: 0.001
+    COOLDOWN: 0
+    FACTOR: 0.1
+    MAX_DECAY_STEP: 3
+OUTPUT_DIR: './output/relation_baseline'
+TEST:
+  ALLOW_LOAD_FROM_CACHE: False
+  RELATION:
+    SYNC_GATHER: True      # turn on will slow down the evaluation to solve the sgdet test out of memory problem
+    REQUIRE_OVERLAP: False
+    LATER_NMS_PREDICTION_THRES: 0.5
+
+2020-06-11 09:36:41,948 maskrcnn_benchmark INFO: Running with config:
+AMP_VERBOSE: False
+DATALOADER:
+  ASPECT_RATIO_GROUPING: True
+  NUM_WORKERS: 4
+  SIZE_DIVISIBILITY: 32
+DATASETS:
+  TEST: ('VG_stanford_filtered_with_attribute_test',)
+  TRAIN: ('VG_stanford_filtered_with_attribute_train',)
+  VAL: ('VG_stanford_filtered_with_attribute_val',)
+DTYPE: float16
+GLOVE_DIR: glove/
+INPUT:
+  BRIGHTNESS: 0.0
+  CONTRAST: 0.0
+  HUE: 0.0
+  MAX_SIZE_TEST: 1000
+  MAX_SIZE_TRAIN: 1000
+  MIN_SIZE_TEST: 600
+  MIN_SIZE_TRAIN: (600,)
+  PIXEL_MEAN: [102.9801, 115.9465, 122.7717]
+  PIXEL_STD: [1.0, 1.0, 1.0]
+  SATURATION: 0.0
+  TO_BGR255: True
+  VERTICAL_FLIP_PROB_TRAIN: 0.0
+MODEL:
+  ATTRIBUTE_ON: False
+  BACKBONE:
+    CONV_BODY: R-101-FPN
+    FREEZE_CONV_BODY_AT: 2
+  CLS_AGNOSTIC_BBOX_REG: False
+  DEVICE: cuda
+  FBNET:
+    ARCH: default
+    ARCH_DEF: 
+    BN_TYPE: bn
+    DET_HEAD_BLOCKS: []
+    DET_HEAD_LAST_SCALE: 1.0
+    DET_HEAD_STRIDE: 0
+    DW_CONV_SKIP_BN: True
+    DW_CONV_SKIP_RELU: True
+    KPTS_HEAD_BLOCKS: []
+    KPTS_HEAD_LAST_SCALE: 0.0
+    KPTS_HEAD_STRIDE: 0
+    MASK_HEAD_BLOCKS: []
+    MASK_HEAD_LAST_SCALE: 0.0
+    MASK_HEAD_STRIDE: 0
+    RPN_BN_TYPE: 
+    RPN_HEAD_BLOCKS: 0
+    SCALE_FACTOR: 1.0
+    WIDTH_DIVISOR: 1
+  FLIP_AUG: False
+  FPN:
+    USE_GN: False
+    USE_RELU: False
+  GROUP_NORM:
+    DIM_PER_GP: -1
+    EPSILON: 1e-05
+    NUM_GROUPS: 32
+  KEYPOINT_ON: False
+  MASK_ON: False
+  META_ARCHITECTURE: GeneralizedRCNN
+  PRETRAINED_DETECTOR_CKPT: checkpoint/pretrained_faster_rcnn/model_final.pth
+  RELATION_ON: True
+  RESNETS:
+    BACKBONE_OUT_CHANNELS: 256
+    DEFORMABLE_GROUPS: 1
+    NUM_GROUPS: 32
+    RES2_OUT_CHANNELS: 256
+    RES5_DILATION: 1
+    STAGE_WITH_DCN: (False, False, False, False)
+    STEM_FUNC: StemWithFixedBatchNorm
+    STEM_OUT_CHANNELS: 64
+    STRIDE_IN_1X1: False
+    TRANS_FUNC: BottleneckWithFixedBatchNorm
+    WIDTH_PER_GROUP: 8
+    WITH_MODULATED_DCN: False
+  RETINANET:
+    ANCHOR_SIZES: (32, 64, 128, 256, 512)
+    ANCHOR_STRIDES: (8, 16, 32, 64, 128)
+    ASPECT_RATIOS: (0.5, 1.0, 2.0)
+    BBOX_REG_BETA: 0.11
+    BBOX_REG_WEIGHT: 4.0
+    BG_IOU_THRESHOLD: 0.4
+    FG_IOU_THRESHOLD: 0.5
+    INFERENCE_TH: 0.05
+    LOSS_ALPHA: 0.25
+    LOSS_GAMMA: 2.0
+    NMS_TH: 0.4
+    NUM_CLASSES: 81
+    NUM_CONVS: 4
+    OCTAVE: 2.0
+    PRE_NMS_TOP_N: 1000
+    PRIOR_PROB: 0.01
+    SCALES_PER_OCTAVE: 3
+    STRADDLE_THRESH: 0
+    USE_C5: True
+  RETINANET_ON: False
+  ROI_ATTRIBUTE_HEAD:
+    ATTRIBUTE_BGFG_RATIO: 3
+    ATTRIBUTE_BGFG_SAMPLE: True
+    ATTRIBUTE_LOSS_WEIGHT: 1.0
+    FEATURE_EXTRACTOR: FPN2MLPFeatureExtractor
+    MAX_ATTRIBUTES: 10
+    NUM_ATTRIBUTES: 201
+    POS_WEIGHT: 50.0
+    PREDICTOR: FPNPredictor
+    SHARE_BOX_FEATURE_EXTRACTOR: True
+    USE_BINARY_LOSS: True
+  ROI_BOX_HEAD:
+    CONV_HEAD_DIM: 256
+    DILATION: 1
+    FEATURE_EXTRACTOR: FPN2MLPFeatureExtractor
+    MLP_HEAD_DIM: 4096
+    NUM_CLASSES: 151
+    NUM_STACKED_CONVS: 4
+    POOLER_RESOLUTION: 7
+    POOLER_SAMPLING_RATIO: 2
+    POOLER_SCALES: (0.25, 0.125, 0.0625, 0.03125)
+    PREDICTOR: FPNPredictor
+    USE_GN: False
+  ROI_HEADS:
+    BATCH_SIZE_PER_IMAGE: 256
+    BBOX_REG_WEIGHTS: (10.0, 10.0, 5.0, 5.0)
+    BG_IOU_THRESHOLD: 0.3
+    DETECTIONS_PER_IMG: 80
+    FG_IOU_THRESHOLD: 0.5
+    NMS: 0.3
+    NMS_FILTER_DUPLICATES: True
+    POSITIVE_FRACTION: 0.5
+    POST_NMS_PER_CLS_TOPN: 300
+    SCORE_THRESH: 0.01
+    USE_FPN: True
+  ROI_KEYPOINT_HEAD:
+    CONV_LAYERS: (512, 512, 512, 512, 512, 512, 512, 512)
+    FEATURE_EXTRACTOR: KeypointRCNNFeatureExtractor
+    MLP_HEAD_DIM: 1024
+    NUM_CLASSES: 17
+    POOLER_RESOLUTION: 14
+    POOLER_SAMPLING_RATIO: 0
+    POOLER_SCALES: (0.0625,)
+    PREDICTOR: KeypointRCNNPredictor
+    RESOLUTION: 14
+    SHARE_BOX_FEATURE_EXTRACTOR: True
+  ROI_MASK_HEAD:
+    CONV_LAYERS: (256, 256, 256, 256)
+    DILATION: 1
+    FEATURE_EXTRACTOR: ResNet50Conv5ROIFeatureExtractor
+    MLP_HEAD_DIM: 1024
+    POOLER_RESOLUTION: 14
+    POOLER_SAMPLING_RATIO: 0
+    POOLER_SCALES: (0.0625,)
+    POSTPROCESS_MASKS: False
+    POSTPROCESS_MASKS_THRESHOLD: 0.5
+    PREDICTOR: MaskRCNNC4Predictor
+    RESOLUTION: 14
+    SHARE_BOX_FEATURE_EXTRACTOR: True
+    USE_GN: False
+  ROI_RELATION_HEAD:
+    ADD_GTBOX_TO_PROPOSAL_IN_TRAIN: True
+    BATCH_SIZE_PER_IMAGE: 1024
+    CAUSAL:
+      CONTEXT_LAYER: motifs
+      EFFECT_ANALYSIS: True
+      EFFECT_TYPE: TDE
+      FUSION_TYPE: dist
+      SEPARATE_SPATIAL: False
+      SPATIAL_FOR_VISION: True
+    CONTEXT_DROPOUT_RATE: 0.2
+    CONTEXT_HIDDEN_DIM: 512
+    CONTEXT_OBJ_LAYER: 1
+    CONTEXT_POOLING_DIM: 4096
+    CONTEXT_REL_LAYER: 1
+    EMBED_DIM: 200
+    FEATURE_EXTRACTOR: RelationFeatureExtractor
+    LABEL_SMOOTHING_LOSS: False
+    NUM_CLASSES: 51
+    NUM_SAMPLE_PER_GT_REL: 4
+    POOLING_ALL_LEVELS: True
+    POSITIVE_FRACTION: 0.25
+    PREDICTOR: CausalAnalysisPredictor
+    PREDICT_USE_BIAS: True
+    PREDICT_USE_VISION: True
+    REL_PROP: [0.01858, 0.00057, 0.00051, 0.00109, 0.0015, 0.00489, 0.00432, 0.02913, 0.00245, 0.00121, 0.00404, 0.0011, 0.00132, 0.00172, 5e-05, 0.00242, 0.0005, 0.00048, 0.00208, 0.15608, 0.0265, 0.06091, 0.009, 0.00183, 0.00225, 0.0009, 0.00028, 0.00077, 0.04844, 0.08645, 0.31621, 0.00088, 0.00301, 0.00042, 0.00186, 0.001, 0.00027, 0.01012, 0.0001, 0.01286, 0.00647, 0.00084, 0.01077, 0.00132, 0.00069, 0.00376, 0.00214, 0.11424, 0.01205, 0.02958]
+    REQUIRE_BOX_OVERLAP: False
+    TRANSFORMER:
+      DROPOUT_RATE: 0.1
+      INNER_DIM: 2048
+      KEY_DIM: 64
+      NUM_HEAD: 8
+      OBJ_LAYER: 4
+      REL_LAYER: 2
+      VAL_DIM: 64
+    USE_GT_BOX: True
+    USE_GT_OBJECT_LABEL: True
+  RPN:
+    ANCHOR_SIZES: (32, 64, 128, 256, 512)
+    ANCHOR_STRIDE: (4, 8, 16, 32, 64)
+    ASPECT_RATIOS: (0.23232838, 0.63365731, 1.28478321, 3.15089189)
+    BATCH_SIZE_PER_IMAGE: 256
+    BG_IOU_THRESHOLD: 0.3
+    FG_IOU_THRESHOLD: 0.7
+    FPN_POST_NMS_PER_BATCH: False
+    FPN_POST_NMS_TOP_N_TEST: 1000
+    FPN_POST_NMS_TOP_N_TRAIN: 1000
+    MIN_SIZE: 0
+    NMS_THRESH: 0.7
+    POSITIVE_FRACTION: 0.5
+    POST_NMS_TOP_N_TEST: 1000
+    POST_NMS_TOP_N_TRAIN: 1000
+    PRE_NMS_TOP_N_TEST: 6000
+    PRE_NMS_TOP_N_TRAIN: 6000
+    RPN_HEAD: SingleConvRPNHead
+    RPN_MID_CHANNEL: 256
+    STRADDLE_THRESH: 0
+    USE_FPN: True
+  RPN_ONLY: False
+  VGG:
+    VGG16_OUT_CHANNELS: 512
+  WEIGHT: catalog://ImageNetPretrained/FAIR/20171220/X-101-32x8d
+OUTPUT_DIR: checkpoint/precls-CausalAnalysisPredictor-motifs-dist1-TDE
+PATHS_CATALOG: /root/Scene/maskrcnn_benchmark/config/paths_catalog.py
+PATHS_DATA: /root/Scene/maskrcnn_benchmark/config/../data/datasets
+SOLVER:
+  BASE_LR: 0.01
+  BIAS_LR_FACTOR: 1
+  CHECKPOINT_PERIOD: 2000
+  CLIP_NORM: 5.0
+  GAMMA: 0.1
+  GRAD_NORM_CLIP: 5.0
+  IMS_PER_BATCH: 64
+  MAX_ITER: 40000
+  MOMENTUM: 0.9
+  PRE_VAL: True
+  PRINT_GRAD_FREQ: 4000
+  SCHEDULE:
+    COOLDOWN: 0
+    FACTOR: 0.1
+    MAX_DECAY_STEP: 3
+    PATIENCE: 2
+    THRESHOLD: 0.001
+    TYPE: WarmupReduceLROnPlateau
+  STEPS: (10000, 16000)
+  TO_VAL: True
+  UPDATE_SCHEDULE_DURING_LOAD: False
+  VAL_PERIOD: 2000
+  WARMUP_FACTOR: 0.1
+  WARMUP_ITERS: 500
+  WARMUP_METHOD: linear
+  WEIGHT_DECAY: 0.0001
+  WEIGHT_DECAY_BIAS: 0.0
+TEST:
+  ALLOW_LOAD_FROM_CACHE: False
+  BBOX_AUG:
+    ENABLED: False
+    H_FLIP: False
+    MAX_SIZE: 4000
+    SCALES: ()
+    SCALE_H_FLIP: False
+  DETECTIONS_PER_IMG: 100
+  EXPECTED_RESULTS: []
+  EXPECTED_RESULTS_SIGMA_TOL: 4
+  IMS_PER_BATCH: 8
+  RELATION:
+    IOU_THRESHOLD: 0.5
+    LATER_NMS_PREDICTION_THRES: 0.5
+    MULTIPLE_PREDS: False
+    REQUIRE_OVERLAP: False
+    SYNC_GATHER: True
+  SAVE_PROPOSALS: False
+2020-06-11 09:36:41,949 maskrcnn_benchmark INFO: Saving config into: checkpoint/precls-CausalAnalysisPredictor-motifs-dist1-TDE/config.yml
+2020-06-11 09:36:41,985 maskrcnn_benchmark INFO: #################### prepare training ####################
+2020-06-11 09:36:45,294 maskrcnn_benchmark.data.build INFO: ----------------------------------------------------------------------------------------------------
+2020-06-11 09:36:45,294 maskrcnn_benchmark.data.build INFO: get dataset statistics...
+2020-06-11 09:37:12,414 maskrcnn_benchmark.data.build INFO: finish
+2020-06-11 09:37:12,415 maskrcnn_benchmark.data.build INFO: Save data statistics to: checkpoint/precls-CausalAnalysisPredictor-motifs-dist1-TDE/VG_stanford_filtered_with_attribute_train_statistics.cache
+2020-06-11 09:37:12,415 maskrcnn_benchmark.data.build INFO: ----------------------------------------------------------------------------------------------------
+2020-06-11 09:37:13,709 maskrcnn_benchmark INFO: #################### end model construction ####################
+2020-06-11 09:37:14,331 maskrcnn_benchmark INFO: #################### end optimizer and shcedule ####################
+2020-06-11 09:37:14,379 maskrcnn_benchmark INFO: #################### end distributed ####################
+2020-06-11 09:37:14,381 maskrcnn_benchmark.utils.checkpoint INFO: Loading checkpoint from checkpoint/pretrained_faster_rcnn/model_final.pth
+2020-06-11 09:37:15,265 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.box_feature_extractor.fc6.bias in current model to module.roi_heads.box.feature_extractor.fc6.bias in loaded model.
+2020-06-11 09:37:15,265 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.box_feature_extractor.fc6.weight in current model to module.roi_heads.box.feature_extractor.fc6.weight in loaded model.
+2020-06-11 09:37:15,265 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.box_feature_extractor.fc7.bias in current model to module.roi_heads.box.feature_extractor.fc7.bias in loaded model.
+2020-06-11 09:37:15,265 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.box_feature_extractor.fc7.weight in current model to module.roi_heads.box.feature_extractor.fc7.weight in loaded model.
+2020-06-11 09:37:15,265 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.bias in current model to module.roi_heads.box.feature_extractor.fc6.bias in loaded model.
+2020-06-11 09:37:15,265 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.weight in current model to module.roi_heads.box.feature_extractor.fc6.weight in loaded model.
+2020-06-11 09:37:15,266 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.bias in current model to module.roi_heads.box.feature_extractor.fc7.bias in loaded model.
+2020-06-11 09:37:15,266 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.weight in current model to module.roi_heads.box.feature_extractor.fc7.weight in loaded model.
+2020-06-11 09:37:15,266 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.bias in current model to module.roi_heads.box.feature_extractor.pooler.reduce_channel.0.bias in loaded model.
+2020-06-11 09:37:15,266 maskrcnn_benchmark.utils.model_serialization INFO: MAPPING module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.weight in current model to module.roi_heads.box.feature_extractor.pooler.reduce_channel.0.weight in loaded model.
+2020-06-11 09:37:15,327 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.box_feature_extractor.fc6.bias                                           loaded from roi_heads.box.feature_extractor.fc6.bias         of shape (4096,)
+2020-06-11 09:37:15,327 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.box_feature_extractor.fc6.weight                                         loaded from roi_heads.box.feature_extractor.fc6.weight       of shape (4096, 12544)
+2020-06-11 09:37:15,327 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.box_feature_extractor.fc7.bias                                           loaded from roi_heads.box.feature_extractor.fc7.bias         of shape (4096,)
+2020-06-11 09:37:15,327 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.box_feature_extractor.fc7.weight                                         loaded from roi_heads.box.feature_extractor.fc7.weight       of shape (4096, 4096)
+2020-06-11 09:37:15,327 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.avg_post_ctx of shape (4096,)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.input_linearity.bias of shape (3072,)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.input_linearity.weight of shape (3072, 5136)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.obj_embed.weight of shape (152, 200)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.out_obj.bias of shape (151,)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.out_obj.weight of shape (151, 512)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.state_linearity.bias of shape (2560,)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.decoder_rnn.state_linearity.weight of shape (2560, 512)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0 of shape (2048,)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0_reverse of shape (2048,)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0 of shape (2048,)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0_reverse of shape (2048,)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0 of shape (2048, 512)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0_reverse of shape (2048, 512)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0 of shape (2048, 4808)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0_reverse of shape (2048, 4808)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.lin_edge_h.bias of shape (512,)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.lin_edge_h.weight of shape (512, 1024)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.lin_obj_h.bias of shape (512,)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.lin_obj_h.weight of shape (512, 1024)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0 of shape (2048,)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0_reverse of shape (2048,)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0 of shape (2048,)
+2020-06-11 09:37:15,328 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0_reverse of shape (2048,)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0 of shape (2048, 512)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0_reverse of shape (2048, 512)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0 of shape (2048, 4424)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0_reverse of shape (2048, 4424)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_embed1.weight of shape (151, 200)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.obj_embed2.weight of shape (151, 200)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.0.bias of shape (32,)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.0.weight of shape (32, 9)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.1.bias of shape (32,)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.1.num_batches_tracked of shape ()
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.1.running_mean of shape (32,)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.1.running_var of shape (32,)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.1.weight of shape (32,)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.2.bias of shape (128,)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.pos_embed.2.weight of shape (128, 32)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.untreated_dcd_feat of shape (4936,)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.untreated_edg_feat of shape (4296,)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.context_layer.untreated_obj_feat of shape (4424,)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.ctx_compress.bias of shape (51,)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.ctx_compress.weight of shape (51, 4096)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.freq_bias.obj_baseline.weight of shape (22801, 51)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.post_cat.0.bias of shape (4096,)
+2020-06-11 09:37:15,329 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.post_cat.0.weight of shape (4096, 1024)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.post_emb.bias of shape (1024,)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.post_emb.weight of shape (1024, 512)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.spt_emb.0.bias of shape (512,)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.spt_emb.0.weight of shape (512, 32)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.spt_emb.2.bias of shape (4096,)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.spt_emb.2.weight of shape (4096, 512)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.untreated_conv_spt of shape (4096,)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.untreated_feat of shape (4096,)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.untreated_spt of shape (32,)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.vis_compress.bias of shape (51,)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.predictor.vis_compress.weight of shape (51, 4096)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.bias                       loaded from roi_heads.box.feature_extractor.fc6.bias         of shape (4096,)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.weight                     loaded from roi_heads.box.feature_extractor.fc6.weight       of shape (4096, 12544)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.bias                       loaded from roi_heads.box.feature_extractor.fc7.bias         of shape (4096,)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: REMATCHING! module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.weight                     loaded from roi_heads.box.feature_extractor.fc7.weight       of shape (4096, 4096)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.bias of shape (256,)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.weight of shape (256, 1024, 3, 3)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.0.bias of shape (128,)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.0.weight of shape (128, 2, 7, 7)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.2.bias of shape (128,)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.2.num_batches_tracked of shape ()
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.2.running_mean of shape (128,)
+2020-06-11 09:37:15,330 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.2.running_var of shape (128,)
+2020-06-11 09:37:15,331 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.2.weight of shape (128,)
+2020-06-11 09:37:15,331 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.4.bias of shape (256,)
+2020-06-11 09:37:15,331 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.4.weight of shape (256, 128, 3, 3)
+2020-06-11 09:37:15,331 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.6.bias of shape (256,)
+2020-06-11 09:37:15,331 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.6.num_batches_tracked of shape ()
+2020-06-11 09:37:15,331 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.6.running_mean of shape (256,)
+2020-06-11 09:37:15,331 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.6.running_var of shape (256,)
+2020-06-11 09:37:15,331 maskrcnn_benchmark.utils.model_serialization INFO: NO-MATCHING of current module: module.roi_heads.relation.union_feature_extractor.rect_conv.6.weight of shape (256,)
+2020-06-11 09:37:21,652 maskrcnn_benchmark INFO: #################### end load checkpointer ####################
+2020-06-11 09:37:21,652 maskrcnn_benchmark.data.build WARNING: When using more than one image per GPU you may encounter an out-of-memory (OOM) error if your GPU does not have sufficient memory. If this happens, you can reduce SOLVER.IMS_PER_BATCH (for training) or TEST.IMS_PER_BATCH (for inference). For training, you must also adjust the learning rate and schedule length according to the linear scaling rule. See for example: https://github.com/facebookresearch/Detectron/blob/master/configs/getting_started/tutorial_1gpu_e2e_faster_rcnn_R-50-FPN.yaml#L14
+2020-06-11 09:37:24,428 maskrcnn_benchmark.utils.miscellaneous INFO: Saving labels mapping into checkpoint/precls-CausalAnalysisPredictor-motifs-dist1-TDE/labels.json
+2020-06-11 09:37:25,787 maskrcnn_benchmark INFO: #################### end dataloader ####################
+2020-06-11 09:37:25,787 maskrcnn_benchmark INFO: Validate before training
+2020-06-11 09:37:25,797 maskrcnn_benchmark INFO: Start evaluation on VG_stanford_filtered_with_attribute_val dataset(5000 images).
+2020-06-11 09:38:58,332 maskrcnn_benchmark INFO: Total run time: 0:01:32.535412 (0.14805665855407715 s / img per device, on 8 devices)
+2020-06-11 09:38:58,333 maskrcnn_benchmark INFO: Model inference time: 0:01:10.627927 (0.11300468292236328 s / img per device, on 8 devices)
+2020-06-11 09:40:05,774 maskrcnn_benchmark INFO: 
+====================================================================================================
+Detection evaluation mAp=0.9999
+====================================================================================================
+SGG eval:   R @ 20: 0.0026;   R @ 50: 0.0041;   R @ 100: 0.0054;  for mode=predcls, type=Recall(Main).
+SGG eval: ngR @ 20: 0.0069; ngR @ 50: 0.0226; ngR @ 100: 0.0469;  for mode=predcls, type=No Graph Constraint Recall(Main).
+SGG eval:  zR @ 20: 0.0044;  zR @ 50: 0.0044;  zR @ 100: 0.0044;  for mode=predcls, type=Zero Shot Recall.
+SGG eval:  mR @ 20: 0.0092;  mR @ 50: 0.0150;  mR @ 100: 0.0203;  for mode=predcls, type=Mean Recall.
+(above:0.0011) (across:0.0000) (against:0.0000) (along:0.4551) (and:0.0000) (at:0.0000) (attached to:0.0336) (behind:0.0009) (belonging to:0.0000) (between:0.0577) (carrying:0.0395) (covered in:0.0000) (covering:0.0000) (eating:0.0000) (flying in:0.0000) (for:0.0370) (from:0.0000) (growing on:0.0000) (hanging from:0.1029) (has:0.0071) (holding:0.0000) (in:0.0065) (in front of:0.0000) (laying on:0.0000) (looking at:0.0000) (lying on:0.1556) (made of:0.0000) (mounted on:0.0000) (near:0.0002) (of:0.0003) (on:0.0016) (on back of:0.0000) (over:0.0122) (painted on:0.0000) (parked on:0.0000) (part of:0.0000) (playing:0.0000) (riding:0.0000) (says:0.0000) (sitting on:0.0000) (standing on:0.0000) (to:0.0000) (under:0.0000) (using:0.0000) (walking in:0.0000) (walking on:0.0409) (watching:0.0000) (wearing:0.0005) (wears:0.0600) (with:0.0018) 
+SGG eval:   A @ 20: 0.0056;   A @ 50: 0.0056;   A @ 100: 0.0056;  for mode=predcls, type=TopK Accuracy.
+====================================================================================================
+
+2020-06-11 09:40:06,552 maskrcnn_benchmark INFO: Start training
+2020-06-11 09:40:08,893 maskrcnn_benchmark INFO: ---Total norm nan clip coef nan-----------------
+2020-06-11 09:40:08,907 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.bias: inf, (torch.Size([51]))
+2020-06-11 09:40:08,907 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.bias: inf, (torch.Size([51]))
+2020-06-11 09:40:08,907 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.weight: 146448.65625, (torch.Size([4096, 512]))
+2020-06-11 09:40:08,907 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.2.bias: 50120.32031, (torch.Size([4096]))
+2020-06-11 09:40:08,907 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.weight: 47715.27734, (torch.Size([512, 32]))
+2020-06-11 09:40:08,907 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.spt_emb.0.bias: 15001.07324, (torch.Size([512]))
+2020-06-11 09:40:08,907 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.freq_bias.obj_baseline.weight: 737.55078, (torch.Size([22801, 51]))
+2020-06-11 09:40:08,907 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.weight: 10.26378, (torch.Size([4096, 4096]))
+2020-06-11 09:40:08,907 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.weight: 9.84869, (torch.Size([4096, 12544]))
+2020-06-11 09:40:08,907 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.ctx_compress.weight: 2.42199, (torch.Size([51, 4096]))
+2020-06-11 09:40:08,908 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.weight: 2.09434, (torch.Size([256, 1024, 3, 3]))
+2020-06-11 09:40:08,908 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.weight: 1.49996, (torch.Size([4096, 1024]))
+2020-06-11 09:40:08,908 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.weight: 1.45765, (torch.Size([512, 1024]))
+2020-06-11 09:40:08,908 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.weight: 1.25547, (torch.Size([4096, 4096]))
+2020-06-11 09:40:08,908 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.weight: 1.11699, (torch.Size([256, 128, 3, 3]))
+2020-06-11 09:40:08,908 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0: 0.75550, (torch.Size([2048, 4808]))
+2020-06-11 09:40:08,908 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_ih_l0_reverse: 0.73836, (torch.Size([2048, 4808]))
+2020-06-11 09:40:08,908 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.weight: 0.60211, (torch.Size([4096, 12544]))
+2020-06-11 09:40:08,908 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_edge_h.bias: 0.57587, (torch.Size([512]))
+2020-06-11 09:40:08,908 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.weight: 0.25230, (torch.Size([128, 2, 7, 7]))
+2020-06-11 09:40:08,908 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.weight: 0.17128, (torch.Size([512, 1024]))
+2020-06-11 09:40:08,908 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0: 0.12528, (torch.Size([2048, 512]))
+2020-06-11 09:40:08,908 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.weight_hh_l0_reverse: 0.12419, (torch.Size([2048, 512]))
+2020-06-11 09:40:08,909 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc7.bias: 0.10514, (torch.Size([4096]))
+2020-06-11 09:40:08,909 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_cat.0.bias: 0.09271, (torch.Size([4096]))
+2020-06-11 09:40:08,909 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0_reverse: 0.08885, (torch.Size([2048, 4424]))
+2020-06-11 09:40:08,909 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_ih_l0: 0.08400, (torch.Size([2048, 4424]))
+2020-06-11 09:40:08,909 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0: 0.07775, (torch.Size([2048]))
+2020-06-11 09:40:08,909 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0: 0.07775, (torch.Size([2048]))
+2020-06-11 09:40:08,909 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.bias: 0.07771, (torch.Size([256]))
+2020-06-11 09:40:08,909 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_ih_l0_reverse: 0.07576, (torch.Size([2048]))
+2020-06-11 09:40:08,909 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.edge_ctx_rnn.bias_hh_l0_reverse: 0.07576, (torch.Size([2048]))
+2020-06-11 09:40:08,909 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.weight: 0.06862, (torch.Size([1024, 512]))
+2020-06-11 09:40:08,909 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.lin_obj_h.bias: 0.06490, (torch.Size([512]))
+2020-06-11 09:40:08,909 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.post_emb.bias : 0.05867, (torch.Size([1024]))
+2020-06-11 09:40:08,909 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.fc6.bias: 0.04749, (torch.Size([4096]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.feature_extractor.pooler.reduce_channel.0.bias: 0.04241, (torch.Size([256]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.0.bias: 0.03624, (torch.Size([128]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc7.bias: 0.03400, (torch.Size([4096]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.6.weight: 0.02102, (torch.Size([256]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.4.bias: 0.02065, (torch.Size([256]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.weight: 0.01889, (torch.Size([128]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.union_feature_extractor.rect_conv.2.bias: 0.01539, (torch.Size([128]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0_reverse: 0.01513, (torch.Size([2048, 512]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.weight_hh_l0: 0.01429, (torch.Size([2048, 512]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0_reverse: 0.00886, (torch.Size([2048]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0_reverse: 0.00886, (torch.Size([2048]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_ih_l0: 0.00838, (torch.Size([2048]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_ctx_rnn.bias_hh_l0: 0.00838, (torch.Size([2048]))
+2020-06-11 09:40:08,910 maskrcnn_benchmark INFO: module.roi_heads.relation.box_feature_extractor.fc6.bias: 0.00787, (torch.Size([4096]))
+2020-06-11 09:40:08,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed2.weight: 0.00581, (torch.Size([151, 200]))
+2020-06-11 09:40:08,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.weight: 0.00426, (torch.Size([128, 32]))
+2020-06-11 09:40:08,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.weight: 0.00254, (torch.Size([32, 9]))
+2020-06-11 09:40:08,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.2.bias: 0.00181, (torch.Size([128]))
+2020-06-11 09:40:08,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.bias: 0.00109, (torch.Size([32]))
+2020-06-11 09:40:08,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.obj_embed1.weight: 0.00071, (torch.Size([151, 200]))
+2020-06-11 09:40:08,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.1.weight: 0.00045, (torch.Size([32]))
+2020-06-11 09:40:08,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.context_layer.pos_embed.0.bias: 0.00000, (torch.Size([32]))
+2020-06-11 09:40:08,911 maskrcnn_benchmark INFO: module.roi_heads.relation.predictor.vis_compress.weight: nan, (torch.Size([51, 4096]))
+2020-06-11 09:40:08,911 maskrcnn_benchmark INFO: -------------------------------
+2020-06-11 09:43:58,270 maskrcnn_benchmark INFO: eta: 12:48:31  iter: 200  loss: 9.9814 (292.5421)  auxiliary_ctx: 0.3217 (0.7073)  auxiliary_frq: 0.2069 (0.2092)  auxiliary_vis: 0.5190 (2.9279)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 8.9012 (288.6978)  time: 1.1456 (1.1586)  data: 0.0252 (0.0289)  lr: 0.293248  max mem: 6064
+2020-06-11 09:47:49,116 maskrcnn_benchmark INFO: eta: 12:43:13  iter: 400  loss: 566.7425 (43774.6654)  auxiliary_ctx: 0.2917 (0.5189)  auxiliary_frq: 0.2083 (0.2091)  auxiliary_vis: 1.3283 (14.5733)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 565.3185 (43759.3649)  time: 1.1465 (1.1564)  data: 0.0253 (0.0264)  lr: 0.523648  max mem: 6064
+2020-06-11 09:51:39,534 maskrcnn_benchmark INFO: eta: 12:38:25  iter: 600  loss: 326.1679 (inf)  auxiliary_ctx: 0.4108 (18.7832)  auxiliary_frq: 0.2061 (0.2092)  auxiliary_vis: 1.3777 (inf)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: 312.4322 (inf)  time: 1.1456 (1.1550)  data: 0.0250 (0.0255)  lr: 0.640000  max mem: 6128
+2020-06-11 09:55:26,554 maskrcnn_benchmark INFO: eta: 12:31:20  iter: 800  loss: inf (inf)  auxiliary_ctx: 0.3403 (14.1696)  auxiliary_frq: 0.2132 (0.2092)  auxiliary_vis: inf (inf)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: inf (inf)  time: 1.1282 (1.1500)  data: 0.0231 (0.0251)  lr: 0.640000  max mem: 6128
+2020-06-11 09:59:13,569 maskrcnn_benchmark INFO: eta: 12:25:33  iter: 1000  loss: inf (inf)  auxiliary_ctx: 0.3170 (11.4014)  auxiliary_frq: 0.2052 (0.2093)  auxiliary_vis: inf (inf)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: inf (inf)  time: 1.1320 (1.1470)  data: 0.0244 (0.0249)  lr: 0.640000  max mem: 6128
+2020-06-11 10:03:00,854 maskrcnn_benchmark INFO: eta: 12:20:35  iter: 1200  loss: inf (inf)  auxiliary_ctx: 0.3206 (9.5564)  auxiliary_frq: 0.2054 (0.2094)  auxiliary_vis: inf (inf)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: inf (inf)  time: 1.1381 (1.1453)  data: 0.0242 (0.0247)  lr: 0.640000  max mem: 6128
+2020-06-11 10:06:47,606 maskrcnn_benchmark INFO: eta: 12:15:43  iter: 1400  loss: inf (inf)  auxiliary_ctx: 0.3285 (8.2378)  auxiliary_frq: 0.2110 (0.2092)  auxiliary_vis: inf (inf)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: inf (inf)  time: 1.1287 (1.1436)  data: 0.0247 (0.0246)  lr: 0.640000  max mem: 6128
+2020-06-11 10:10:34,166 maskrcnn_benchmark INFO: eta: 12:11:02  iter: 1600  loss: inf (inf)  auxiliary_ctx: 0.3372 (7.2494)  auxiliary_frq: 0.2102 (0.2093)  auxiliary_vis: inf (inf)  loss_refine_obj: 0.0000 (0.0000)  loss_rel: inf (inf)  time: 1.1372 (1.1423)  data: 0.0246 (0.0244)  lr: 0.640000  max mem: 6128
