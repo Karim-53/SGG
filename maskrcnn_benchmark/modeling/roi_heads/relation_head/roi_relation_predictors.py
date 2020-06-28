@@ -694,7 +694,8 @@ class CausalAnalysisPredictor(nn.Module):
             # union_dists = torch.sigmoid(vis_dists + frq_dists + ctx_dists) - (vis_dists - ctx_dists)**2           # dist 1    Gradient overflow. Skipping step, loss scaler 0 reducing loss scale to 0.0 # https://github.com/NVIDIA/apex/issues/318
             union_dists = torch.sigmoid(vis_dists + frq_dists + ctx_dists) - torch.sigmoid(vis_dists - ctx_dists)**2 # dist 2
         elif self.fusion_type == 'mfb':
-            union_dists = nn.AvgPool2d(kernel_size=2)(vis_dists * frq_dists * ctx_dists)
+            #union_dists = nn.AvgPool2d(kernel_size=2)(vis_dists * frq_dists * ctx_dists)      # mfb1    RuntimeError: non-empty 3D or 4D (batch mode) tensor expected for input
+            union_dists = nn.AvgPool1d(kernel_size=2)(vis_dists * frq_dists * ctx_dists)      # mfb
         else:
             print('invalid fusion type')
 
