@@ -692,7 +692,9 @@ class CausalAnalysisPredictor(nn.Module):
             # applied here:
             #
             # union_dists = torch.sigmoid(vis_dists + frq_dists + ctx_dists) - (vis_dists - ctx_dists)**2           # dist 1    Gradient overflow. Skipping step, loss scaler 0 reducing loss scale to 0.0 # https://github.com/NVIDIA/apex/issues/318
-            union_dists = torch.sigmoid(vis_dists + frq_dists + ctx_dists) - torch.sigmoid(vis_dists - ctx_dists)**2
+            union_dists = torch.sigmoid(vis_dists + frq_dists + ctx_dists) - torch.sigmoid(vis_dists - ctx_dists)**2 # dist 2
+        elif self.fusion_type == 'mfb':
+            union_dists = nn.AvgPool2d(kernel_size=2)(vis_dists * frq_dists * ctx_dists)
         else:
             print('invalid fusion type')
 
