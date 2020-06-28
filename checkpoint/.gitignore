@@ -1,3 +1,10 @@
+# bof
+**/config.yml
+**/labels.json
+**/inference/
+**/last_checkpoint
+pretrained_faster_rcnn/
+
 # models
 *.pth
 *.cache

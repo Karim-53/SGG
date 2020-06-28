@@ -1,3 +1,8 @@
+# bof
+vg/VG_100K/
+vg/VG-SGG-with-attri.h5
+glove/
+
 # compilation and distribution
 __pycache__
 _ext
