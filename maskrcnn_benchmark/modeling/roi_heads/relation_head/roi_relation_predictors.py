@@ -696,8 +696,9 @@ class CausalAnalysisPredictor(nn.Module):
         elif self.fusion_type == 'mfb':
             # union_dists = nn.AvgPool2d(kernel_size=2)(vis_dists * frq_dists * ctx_dists)      # mfb1    RuntimeError: non-empty 3D or 4D (batch mode) tensor expected for input
             # union_dists = nn.AvgPool1d(kernel_size=2)(vis_dists * frq_dists * ctx_dists)      # mfb2     RuntimeError: Expected 3-dimensional tensor, but got 2-dimensional tensor for argument #1 'self' (while checking arguments for avg_pool1d)
-            # union_dists = torch.sigmoid(vis_dists * frq_dists * ctx_dists)      # mfb3  very low acc and gradient overflow after 9600 iterations
-            union_dists = vis_dists * frq_dists * ctx_dists  # mfb4
+            # union_dists = torch.sigmoid(vis_dists * frq_dists * ctx_dists)      # mfb3  very low acc and gradient overflow after 9600 iterations. all metrics below 0.10 after 16000 iter
+            # union_dists = vis_dists * frq_dists * ctx_dists  # mfb4     gradient overflow. score below .04
+            union_dists = ctx_dists * vis_dists * torch.sigmoid(vis_dists + frq_dists + ctx_dists)  # mfb5
         else:
             print('invalid fusion type')
 
