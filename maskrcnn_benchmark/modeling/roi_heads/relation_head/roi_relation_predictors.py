@@ -673,12 +673,12 @@ class CausalAnalysisPredictor(nn.Module):
             ctx_rep = ctx_rep.mean(-1).unsqueeze(-1)
 
 
-        if self.fusion_type == 'mfb':
-            vis_dists = self.vis_compress_2(vis_rep)
-            ctx_dists = self.ctx_compress_2(ctx_rep)
-        else:
-            vis_dists = self.vis_compress(vis_rep)
-            ctx_dists = self.ctx_compress(ctx_rep)
+        # if self.fusion_type == 'mfb':
+        #     vis_dists = self.vis_compress_2(vis_rep)
+        #     ctx_dists = self.ctx_compress_2(ctx_rep)
+        # else:
+        vis_dists = self.vis_compress(vis_rep)
+        ctx_dists = self.ctx_compress(ctx_rep)
 
         if self.fusion_type == 'gate':
             # ye = Wr x_e * sigmoid( Wx x_e + Wv v_e + z_e )
@@ -710,9 +710,10 @@ class CausalAnalysisPredictor(nn.Module):
             # union_dists = torch.sigmoid(vis_dists * frq_dists * ctx_dists)      # mfb3  very low acc and gradient overflow after 9600 iterations. all metrics below 0.10 after 16000 iter
             # union_dists = vis_dists * frq_dists * ctx_dists  # mfb4     gradient overflow. score below .04
             # union_dists = ctx_dists * vis_dists * torch.sigmoid(vis_dists + frq_dists + ctx_dists)  # mfb5 gradient overflow
+            # union_dists = self.avg_pool(ctx_dists * vis_dists) + frq_dists  # mfb6 dimension error
 
-            union_dists = self.avg_pool(ctx_dists * vis_dists) + frq_dists  # mfb6
-            # torch.sigmoid(
+            union_dists = torch.sigmoid(ctx_dists * vis_dists) * torch.sigmoid(vis_dists + frq_dists + ctx_dists)  # mfb7
+            
         else:
             print('invalid fusion type')
 
