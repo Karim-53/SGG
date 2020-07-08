@@ -478,6 +478,11 @@ class CausalAnalysisPredictor(nn.Module):
             self.ctx_compress = nn.Linear(self.pooling_dim, self.num_rel_cls)
         self.vis_compress = nn.Linear(self.pooling_dim, self.num_rel_cls)
 
+        # mfb
+        self.vis_compress_2 = nn.Linear(self.pooling_dim * 2, self.num_rel_cls)
+        self.ctx_compress_2 = nn.Linear(self.pooling_dim * 2, self.num_rel_cls)
+        self.avg_pool = nn.AvgPool1d(kernel_size=2)
+
         if self.fusion_type == 'gate':
             self.ctx_gate_fc = nn.Linear(self.pooling_dim, self.num_rel_cls)
             layer_init(self.ctx_gate_fc, xavier=True)
@@ -666,8 +671,14 @@ class CausalAnalysisPredictor(nn.Module):
 
         if mean_ctx:
             ctx_rep = ctx_rep.mean(-1).unsqueeze(-1)
-        vis_dists = self.vis_compress(vis_rep)
-        ctx_dists = self.ctx_compress(ctx_rep)
+
+
+        if self.fusion_type == 'mfb':
+            vis_dists = self.vis_compress_2(vis_rep)
+            ctx_dists = self.ctx_compress_2(ctx_rep)
+        else:
+            vis_dists = self.vis_compress(vis_rep)
+            ctx_dists = self.ctx_compress(ctx_rep)
 
         if self.fusion_type == 'gate':
             # ye = Wr x_e * sigmoid( Wx x_e + Wv v_e + z_e )
@@ -698,7 +709,10 @@ class CausalAnalysisPredictor(nn.Module):
             # union_dists = nn.AvgPool1d(kernel_size=2)(vis_dists * frq_dists * ctx_dists)      # mfb2     RuntimeError: Expected 3-dimensional tensor, but got 2-dimensional tensor for argument #1 'self' (while checking arguments for avg_pool1d)
             # union_dists = torch.sigmoid(vis_dists * frq_dists * ctx_dists)      # mfb3  very low acc and gradient overflow after 9600 iterations. all metrics below 0.10 after 16000 iter
             # union_dists = vis_dists * frq_dists * ctx_dists  # mfb4     gradient overflow. score below .04
-            union_dists = ctx_dists * vis_dists * torch.sigmoid(vis_dists + frq_dists + ctx_dists)  # mfb5
+            # union_dists = ctx_dists * vis_dists * torch.sigmoid(vis_dists + frq_dists + ctx_dists)  # mfb5 gradient overflow
+
+            union_dists = self.avg_pool(ctx_dists * vis_dists) + frq_dists  # mfb6
+            # torch.sigmoid(
         else:
             print('invalid fusion type')
 
