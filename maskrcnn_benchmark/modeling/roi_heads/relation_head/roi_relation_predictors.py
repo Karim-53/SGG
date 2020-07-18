@@ -656,9 +656,9 @@ class CausalAnalysisPredictor(nn.Module):
         Apply the Fusion Function: SUM, GATE, DIST
         The explanation below refer to Figure 5 in https://arxiv.org/pdf/https://arxiv.org/pdf/
 
-        :param vis_rep: input from U to Y (Visual Context Input for SGG)
-        :param ctx_rep: input from X to Y (Object Feature Input for SGG). If TDE is applied, only this variable would change.
-        :param frq_rep: input from Z to Y (Object Class   Input for SGG). If TE  is applied, this variable and ctx_rep would change.
+        :param vis_rep: v_ij input from U to Y (Visual Context Input for SGG)
+        :param ctx_rep: x_ij input from X to Y (Object Feature Input for SGG). If TDE is applied, only this variable would change.
+        :param frq_rep: z_ij input from Z to Y (Object Class   Input for SGG). If TE  is applied, this variable and ctx_rep would change.
         :param use_label_dist: bool
         :param mean_ctx: bool
 
